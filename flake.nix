@@ -41,7 +41,7 @@
                 partitionTableType = "none";
                 installBootLoader = false;
                 diskSize = "auto";
-                additionalSpace = "512M";
+                additionalSpace = "256M";
                 copyChannel = false;
                 name = "buildkit-runner-rootfs";
                 baseName = "rootfs";
