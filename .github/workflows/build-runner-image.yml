@@ -1,0 +1,46 @@
+name: Build Runner Image
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-image:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: DeterminateSystems/determinate-nix-action@v3
+
+      - name: Build Firecracker rootfs
+        run: |
+          nix build .#buildkit-runner-rootfs \
+            --out-link result-rootfs
+
+      - name: Build kernel
+        run: |
+          nix build .#buildkit-runner-vmlinux \
+            --out-link result-kernel
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p dist
+
+          cp -L result-rootfs/rootfs.img dist/rootfs.ext4
+          cp -L result-kernel/vmlinux dist/vmlinux
+
+          test -f dist/rootfs.ext4
+          test -f dist/vmlinux
+
+          find dist -maxdepth 1 -print
+
+      - name: Upload runner image
+        uses: actions/upload-artifact@v7
+        with:
+          name: buildkit-runner-firecracker
+          path: dist/
