@@ -2,45 +2,41 @@ name: Build Runner Image
 
 on:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag (e.g. v0.1.0)"
+        required: true
+        type: string
 
 jobs:
   build-image:
     runs-on: blacksmith-4vcpu-ubuntu-2404
 
     permissions:
-      contents: read
+      contents: write
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
-      - name: Install Nix
-        uses: DeterminateSystems/determinate-nix-action@v3
+      - uses: DeterminateSystems/determinate-nix-action@v3
 
-      - name: Build Firecracker rootfs
+      - name: Build image
         run: |
-          nix build .#buildkit-runner-rootfs \
-            --out-link result-rootfs
+          nix build .#buildkit-runner-rootfs --out-link result-rootfs
+          nix build .#buildkit-runner-vmlinux --out-link result-kernel
 
-      - name: Build kernel
-        run: |
-          nix build .#buildkit-runner-vmlinux \
-            --out-link result-kernel
-
-      - name: Collect artifacts
-        run: |
           mkdir -p dist
-
           cp -L result-rootfs/rootfs.img dist/rootfs.ext4
           cp -L result-kernel/vmlinux dist/vmlinux
 
           test -f dist/rootfs.ext4
           test -f dist/vmlinux
 
-          find dist -maxdepth 1 -print
-
-      - name: Upload runner image
-        uses: actions/upload-artifact@v7
+      - uses: softprops/action-gh-release@v2
         with:
-          name: buildkit-runner-firecracker
-          path: dist/
+          tag_name: ${{ inputs.release_tag }}
+          name: BuildKit Runner ${{ inputs.release_tag }}
+          generate_release_notes: true
+          files: |
+            dist/rootfs.ext4
+            dist/vmlinux
