@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/klauspost/compress/zstd"
 )
@@ -14,11 +15,27 @@ const (
 	InitrdImage           = "initrd"
 	RootfsImage           = "rootfs.ext4"
 	RootfsImageCompressed = "rootfs.ext4.zst"
+	BootArgsFile          = "boot.args"
 )
 
 var required = []string{
 	KernelImage,
 	InitrdImage,
+	BootArgsFile,
+}
+
+func BootArgs(dir string) (string, error) {
+	data, err := os.ReadFile(filepath.Join(dir, BootArgsFile))
+	if err != nil {
+		return "", fmt.Errorf("read %s: %w", BootArgsFile, err)
+	}
+
+	args := strings.TrimSpace(string(data))
+	if args == "" {
+		return "", fmt.Errorf("%s is empty", BootArgsFile)
+	}
+
+	return args, nil
 }
 
 func ResolveDir() (string, error) {

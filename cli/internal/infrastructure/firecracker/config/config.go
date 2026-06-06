@@ -13,7 +13,6 @@ const (
 	FileName      = "firecracker.json"
 	SocketName    = "firecracker.socket"
 	LogFileName   = "firecracker.log"
-	bootArgs      = "console=ttyS0 reboot=k panic=1 pci=off root=/dev/vda init=/init"
 	defaultVCPUs  = 2
 	defaultMemMiB = 2048
 )
@@ -57,7 +56,7 @@ func SocketPath(vmDir string) string {
 	return filepath.Join(vmDir, SocketName)
 }
 
-func Write(destPath, tap, mac string) error {
+func Write(destPath, tap, mac, bootArgs string) error {
 	vmDir := filepath.Dir(destPath)
 	cfg := vmConfig{}
 	cfg.APISocket.Path = SocketPath(vmDir)

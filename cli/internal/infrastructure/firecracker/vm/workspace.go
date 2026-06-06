@@ -117,7 +117,12 @@ func prepareWorkspace(assetsDir string, res allocate.Resources) (string, error) 
 	}
 
 	configPath := filepath.Join(dir, config.FileName)
-	if err := config.Write(configPath, res.Tap, res.MAC); err != nil {
+	bootArgs, err := assets.BootArgs(assetsDir)
+	if err != nil {
+		_ = os.RemoveAll(dir)
+		return "", err
+	}
+	if err := config.Write(configPath, res.Tap, res.MAC, bootArgs); err != nil {
 		_ = os.RemoveAll(dir)
 		return "", err
 	}

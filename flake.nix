@@ -16,6 +16,12 @@
                 ./nix/systems/buildkit-runner.nix
             ];
         };
+
+        bootArgs = nixpkgs.lib.concatStringsSep " " (
+            buildkitRunner.config.boot.kernelParams ++ [
+                "init=${buildkitRunner.config.system.build.toplevel}/init"
+            ]
+        );
     in
     {
         nixosConfigurations.buildkit-runner = buildkitRunner;
@@ -38,6 +44,8 @@
                     mkdir -p $out
                     cp ${initrd}/${initrdFile} $out/initrd
                 '';
+
+                buildkit-runner-bootargs = buildkitRunner.pkgs.writeText "boot.args" bootArgs;
 
                 buildkit-runner-rootfs = import "${nixpkgs}/nixos/lib/make-disk-image.nix" {
                     pkgs = buildkitRunner.pkgs;

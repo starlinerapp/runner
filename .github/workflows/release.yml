@@ -31,6 +31,7 @@ jobs:
           nix build .#buildkit-runner-rootfs --out-link result-rootfs
           nix build .#buildkit-runner-vmlinux --out-link result-kernel
           nix build .#buildkit-runner-initrd --out-link result-initrd
+          nix build .#buildkit-runner-bootargs --out-link result-bootargs
 
       - name: Build runner CLI
         working-directory: cli
@@ -47,11 +48,13 @@ jobs:
           chmod +x "dist/${bundle}/runner"
           cp -L result-kernel/vmlinux "dist/${bundle}/vmlinux"
           cp -L result-initrd/initrd "dist/${bundle}/initrd"
+          cp -L result-bootargs/boot.args "dist/${bundle}/boot.args"
           zstd -T0 -19 -f -o "dist/${bundle}/rootfs.ext4.zst" result-rootfs/rootfs.img
 
           test -f "dist/${bundle}/runner"
           test -f "dist/${bundle}/vmlinux"
           test -f "dist/${bundle}/initrd"
+          test -f "dist/${bundle}/boot.args"
           test -f "dist/${bundle}/rootfs.ext4.zst"
 
           tar -C dist -cf "dist/${bundle}.tar" "${bundle}"
@@ -83,6 +86,7 @@ jobs:
             - `runner` — CLI
             - `vmlinux` — kernel
             - `initrd` — initramfs
+            - `boot.args` — kernel command line matched to the rootfs
             - `rootfs.ext4.zst` — compressed root disk (decompressed automatically on first `vm create`)
           files: |
             dist/runner-${{ inputs.release_tag }}-linux-amd64.tar
