@@ -23,6 +23,8 @@
         packages.${system} =
             let
                 kernel = buildkitRunner.config.boot.kernelPackages.kernel;
+                initrd = buildkitRunner.config.system.build.initialRamdisk;
+                initrdFile = buildkitRunner.config.system.boot.loader.initrdFile;
             in
             {
                 buildkit-runner-kernel = kernel.dev;
@@ -32,20 +34,25 @@
                     cp ${kernel.dev}/vmlinux $out/vmlinux
                 '';
 
+                buildkit-runner-initrd = buildkitRunner.pkgs.runCommand "buildkit-runner-initrd" { } ''
+                    mkdir -p $out
+                    cp ${initrd}/${initrdFile} $out/initrd
+                '';
+
                 buildkit-runner-rootfs = import "${nixpkgs}/nixos/lib/make-disk-image.nix" {
-                pkgs = buildkitRunner.pkgs;
-                inherit (buildkitRunner.pkgs) lib;
-                config = buildkitRunner.config;
-                format = "raw";
-                fsType = "ext4";
-                partitionTableType = "none";
-                installBootLoader = false;
-                diskSize = "auto";
-                additionalSpace = "256M";
-                copyChannel = false;
-                name = "buildkit-runner-rootfs";
-                baseName = "rootfs";
+                    pkgs = buildkitRunner.pkgs;
+                    inherit (buildkitRunner.pkgs) lib;
+                    config = buildkitRunner.config;
+                    format = "raw";
+                    fsType = "ext4";
+                    partitionTableType = "none";
+                    installBootLoader = false;
+                    diskSize = "auto";
+                    additionalSpace = "256M";
+                    copyChannel = false;
+                    name = "buildkit-runner-rootfs";
+                    baseName = "rootfs";
+                };
             };
-        };
     };
 }

@@ -24,13 +24,16 @@ jobs:
         run: |
           nix build .#buildkit-runner-rootfs --out-link result-rootfs
           nix build .#buildkit-runner-vmlinux --out-link result-kernel
+          nix build .#buildkit-runner-initrd --out-link result-initrd
 
           mkdir -p dist
           cp -L result-rootfs/rootfs.img dist/rootfs.ext4
           cp -L result-kernel/vmlinux dist/vmlinux
+          cp -L result-initrd/initrd dist/initrd
 
           test -f dist/rootfs.ext4
           test -f dist/vmlinux
+          test -f dist/initrd
 
           zstd -T0 -19 dist/rootfs.ext4 -o dist/rootfs.ext4.zst
           rm dist/rootfs.ext4
@@ -45,12 +48,13 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.release_tag }}
-          name: BuildKit Runner ${{ inputs.release_tag }}
+          name: Runner ${{ inputs.release_tag }}
           generate_release_notes: true
           body: |
             ## Firecracker assets
 
             - `vmlinux` — kernel
+            - `initrd` — initramfs (loads virtio block drivers)
             - `rootfs.ext4.zst` — compressed root disk
 
             Decompress the rootfs before booting:
@@ -58,6 +62,29 @@ jobs:
             ```bash
             zstd -d rootfs.ext4.zst
             ```
+
+            Example `firecracker.json`:
+
+            ```json
+            {
+              "boot-source": {
+                "kernel_image_path": "./vmlinux",
+                "initrd_path": "./initrd",
+                "boot_args": "console=ttyS0 reboot=k panic=1 pci=off root=/dev/vda"
+              },
+              "drives": [{
+                "drive_id": "rootfs",
+                "path_on_host": "./rootfs.ext4",
+                "is_root_device": true,
+                "is_read_only": false
+              }],
+              "machine-config": {
+                "vcpu_count": 2,
+                "mem_size_mib": 2048
+              }
+            }
+            ```
           files: |
             dist/rootfs.ext4.zst
             dist/vmlinux
+            dist/initrd
