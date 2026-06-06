@@ -59,11 +59,6 @@ func (vh *VMHandler) newListVMCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if len(vms) == 0 {
-				fmt.Println("No VMs.")
-				return nil
-			}
-
 			for _, vm := range vms {
 				fmt.Printf("VM %s\n", vm.ID)
 				fmt.Printf("  tap:         %s\n", vm.Tap)

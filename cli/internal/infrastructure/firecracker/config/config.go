@@ -10,12 +10,17 @@ import (
 
 const (
 	FileName      = "firecracker.json"
+	SocketName    = "firecracker.socket"
 	bootArgs      = "console=ttyS0 reboot=k panic=1 pci=off root=/dev/vda init=/init"
 	defaultVCPUs  = 2
 	defaultMemMiB = 2048
 )
 
 type vmConfig struct {
+	APISocket struct {
+		Path       string `json:"path"`
+		UpdatePath bool   `json:"update_path"`
+	} `json:"api-socket"`
 	BootSource struct {
 		KernelImagePath string `json:"kernel_image_path"`
 		InitrdPath      string `json:"initrd_path"`
@@ -44,6 +49,8 @@ type networkInterfaceConfig struct {
 
 func Write(destPath, tap, mac string) error {
 	cfg := vmConfig{}
+	cfg.APISocket.Path = "./" + SocketName
+	cfg.APISocket.UpdatePath = false
 	cfg.BootSource.KernelImagePath = "./" + assets.KernelImage
 	cfg.BootSource.InitrdPath = "./" + assets.InitrdImage
 	cfg.BootSource.BootArgs = bootArgs
