@@ -19,7 +19,10 @@ func Ensure() error {
 		return nil
 	}
 
-	url := downloadURL(version, runtime.GOARCH)
+	url, err := downloadURL(version)
+	if err != nil {
+		return err
+	}
 
 	tmpDir, err := os.MkdirTemp("", "firecracker-*")
 	if err != nil {
@@ -53,6 +56,10 @@ func downloadFile(url, dest string) error {
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
 	}(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("download %s: HTTP %s", url, resp.Status)
+	}
 
 	out, err := os.Create(dest)
 	if err != nil {
@@ -112,11 +119,21 @@ func extractBinary(tgzPath, target string) error {
 	return fmt.Errorf("firecracker binary not found in %s", tgzPath)
 }
 
-func downloadURL(version, arch string) string {
+func downloadURL(version string) (string, error) {
+	var arch string
+	switch runtime.GOARCH {
+	case "amd64":
+		arch = "x86_64"
+	case "arm64":
+		arch = "aarch64"
+	default:
+		return "", fmt.Errorf("unsupported architecture %q", runtime.GOARCH)
+	}
+
 	return fmt.Sprintf(
 		"https://github.com/firecracker-microvm/firecracker/releases/download/%s/firecracker-%s-%s.tgz",
 		version,
 		version,
 		arch,
-	)
+	), nil
 }
