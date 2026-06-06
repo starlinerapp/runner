@@ -1,13 +1,15 @@
 package application
 
-import "starliner.app/runner/internal/infrastructure/bundle"
+import "starliner.app/runner/internal/domain/port"
 
-type InstallApplication struct{}
+type InstallApplication struct {
+	installer port.Installer
+}
 
-func NewInstallApplication() *InstallApplication {
-	return &InstallApplication{}
+func NewInstallApplication(installer port.Installer) *InstallApplication {
+	return &InstallApplication{installer: installer}
 }
 
 func (a *InstallApplication) Install() error {
-	return bundle.Install()
+	return a.installer.Install()
 }

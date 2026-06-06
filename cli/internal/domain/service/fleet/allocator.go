@@ -1,10 +1,10 @@
-package allocate
+package fleet
 
 import (
 	"crypto/rand"
 	"fmt"
 
-	domainvm "starliner.app/runner/internal/domain/value"
+	"starliner.app/runner/internal/domain/value"
 )
 
 const (
@@ -12,36 +12,28 @@ const (
 	maxSubnetOctet = 254
 )
 
-type Resources struct {
-	ID          string
-	Tap         string
-	MAC         string
-	SubnetOctet int
-	GuestCID    uint32
-}
-
-func ForFleet(vms []domainvm.VM) (Resources, error) {
+func Allocate(vms []value.VM) (value.VMResources, error) {
 	id, err := randomVMID()
 	if err != nil {
-		return Resources{}, err
+		return value.VMResources{}, err
 	}
 
 	mac, err := randomMAC()
 	if err != nil {
-		return Resources{}, err
+		return value.VMResources{}, err
 	}
 
 	subnetOctet, err := nextSubnetOctet(vms)
 	if err != nil {
-		return Resources{}, err
+		return value.VMResources{}, err
 	}
 
 	guestCID, err := nextGuestCID(vms)
 	if err != nil {
-		return Resources{}, err
+		return value.VMResources{}, err
 	}
 
-	return Resources{
+	return value.VMResources{
 		ID:          id,
 		Tap:         fmt.Sprintf("rtap-%s", id),
 		MAC:         mac,
@@ -66,7 +58,7 @@ func randomMAC() (string, error) {
 	return fmt.Sprintf("AA:FC:%02X:%02X:%02X:%02X", buf[0], buf[1], buf[2], buf[3]), nil
 }
 
-func nextSubnetOctet(vms []domainvm.VM) (int, error) {
+func nextSubnetOctet(vms []value.VM) (int, error) {
 	used := make(map[int]struct{}, len(vms))
 	for _, vm := range vms {
 		used[vm.SubnetOctet] = struct{}{}
@@ -81,7 +73,7 @@ func nextSubnetOctet(vms []domainvm.VM) (int, error) {
 	return 0, fmt.Errorf("no free subnet octets (max %d concurrent VMs)", maxSubnetOctet)
 }
 
-func nextGuestCID(vms []domainvm.VM) (uint32, error) {
+func nextGuestCID(vms []value.VM) (uint32, error) {
 	used := make(map[uint32]struct{}, len(vms))
 	for _, vm := range vms {
 		used[vm.GuestCID] = struct{}{}

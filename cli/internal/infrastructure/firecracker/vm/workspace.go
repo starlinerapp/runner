@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"starliner.app/runner/internal/infrastructure/firecracker/allocate"
+	"starliner.app/runner/internal/domain/value"
 	"starliner.app/runner/internal/infrastructure/firecracker/assets"
 	"starliner.app/runner/internal/infrastructure/firecracker/config"
 	"starliner.app/runner/internal/infrastructure/registry"
@@ -93,7 +93,7 @@ func copyRootfs(src, dst string) error {
 	return nil
 }
 
-func prepareWorkspace(assetsDir string, res allocate.Resources) (string, error) {
+func PrepareWorkspace(assetsDir string, res value.VMResources) (string, error) {
 	dir, err := registry.VMDir(res.ID)
 	if err != nil {
 		return "", err

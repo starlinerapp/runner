@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"starliner.app/runner/internal/domain/port"
 	"starliner.app/runner/internal/infrastructure/firecracker/assets"
 	"starliner.app/runner/internal/infrastructure/firecracker/install"
 	"starliner.app/runner/internal/infrastructure/privileged"
@@ -13,7 +14,13 @@ import (
 
 const BinaryPath = assets.InstalledBinaryDir + "/runner"
 
-func Install() error {
+type Client struct{}
+
+func NewClient() port.Installer {
+	return &Client{}
+}
+
+func (c *Client) Install() error {
 	sourceDir, err := sourceDir()
 	if err != nil {
 		return err

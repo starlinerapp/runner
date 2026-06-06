@@ -2,11 +2,14 @@ package handler
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"starliner.app/runner/internal/application"
-	"starliner.app/runner/internal/infrastructure/firecracker/config"
+	"starliner.app/runner/internal/domain/value"
 )
+
+const firecrackerLogFile = "firecracker.log"
 
 type VMHandler struct {
 	vmApplication *application.VMApplication
@@ -42,8 +45,13 @@ func (vh *VMHandler) newCreateVMCmd() *cobra.Command {
 		Short: "Create a new virtual machine",
 		Long:  "Create a new virtual machine",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			return vh.vmApplication.CreateVM()
+		RunE: func(_ *cobra.Command, _ []string) error {
+			vm, err := vh.vmApplication.CreateVM()
+			if err != nil {
+				return err
+			}
+			printVM("created", *vm)
+			return nil
 		},
 	}
 	return cmd
@@ -61,15 +69,7 @@ func (vh *VMHandler) newListVMCmd() *cobra.Command {
 				return err
 			}
 			for _, vm := range vms {
-				fmt.Printf("VM %s\n", vm.ID)
-				fmt.Printf("  tap:         %s\n", vm.Tap)
-				fmt.Printf("  mac:         %s\n", vm.MAC)
-				fmt.Printf("  subnet:      172.16.%d.0/24\n", vm.SubnetOctet)
-				fmt.Printf("  guest cid:   %d\n", vm.GuestCID)
-				fmt.Printf("  workspace:   %s\n", vm.Dir)
-				fmt.Printf("  log:         %s\n", config.LogPath(vm.Dir))
-				fmt.Printf("  firecracker: pid %d\n", vm.FirecrackerPID)
-				fmt.Printf("  created:     %s\n", vm.CreatedAt.Format("2006-01-02 15:04:05 UTC"))
+				printVM("", vm)
 				fmt.Println()
 			}
 			return nil
@@ -94,4 +94,22 @@ func (vh *VMHandler) newDeleteVMCmd() *cobra.Command {
 		},
 	}
 	return cmd
+}
+
+func printVM(action string, vm value.VM) {
+	if action != "" {
+		fmt.Printf("VM %s %s\n", vm.ID, action)
+	} else {
+		fmt.Printf("VM %s\n", vm.ID)
+	}
+	fmt.Printf("  tap:         %s\n", vm.Tap)
+	fmt.Printf("  mac:         %s\n", vm.MAC)
+	fmt.Printf("  subnet:      172.16.%d.0/24\n", vm.SubnetOctet)
+	fmt.Printf("  guest cid:   %d\n", vm.GuestCID)
+	fmt.Printf("  workspace:   %s\n", vm.Dir)
+	fmt.Printf("  log:         %s\n", filepath.Join(vm.Dir, firecrackerLogFile))
+	fmt.Printf("  firecracker: pid %d\n", vm.FirecrackerPID)
+	if !vm.CreatedAt.IsZero() {
+		fmt.Printf("  created:     %s\n", vm.CreatedAt.Format("2006-01-02 15:04:05 UTC"))
+	}
 }
