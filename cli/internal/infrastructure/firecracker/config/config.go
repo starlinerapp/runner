@@ -12,6 +12,7 @@ import (
 const (
 	FileName      = "firecracker.json"
 	SocketName    = "firecracker.socket"
+	LogFileName   = "firecracker.log"
 	bootArgs      = "console=ttyS0 reboot=k panic=1 pci=off root=/dev/vda init=/init"
 	defaultVCPUs  = 2
 	defaultMemMiB = 2048
@@ -46,6 +47,10 @@ type networkInterfaceConfig struct {
 	IFaceID     string `json:"iface_id"`
 	GuestMAC    string `json:"guest_mac"`
 	HostDevName string `json:"host_dev_name"`
+}
+
+func LogPath(vmDir string) string {
+	return filepath.Join(vmDir, LogFileName)
 }
 
 func SocketPath(vmDir string) string {

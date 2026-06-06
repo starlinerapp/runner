@@ -18,21 +18,29 @@ import (
 func Start(vmDir string) (*exec.Cmd, error) {
 	configPath := filepath.Join(vmDir, config.FileName)
 	socketPath := config.SocketPath(vmDir)
+	logPath := config.LogPath(vmDir)
 
 	if err := os.Remove(socketPath); err != nil && !os.IsNotExist(err) {
 		return nil, fmt.Errorf("remove stale api socket: %w", err)
 	}
 
+	logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
+	if err != nil {
+		return nil, fmt.Errorf("open firecracker log: %w", err)
+	}
+
 	cmd := exec.Command("firecracker", "--api-sock", socketPath, "--config-file", configPath)
 	cmd.Dir = vmDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = logFile
+	cmd.Stderr = logFile
 	cmd.Stdin = nil
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 
 	if err := cmd.Start(); err != nil {
+		_ = logFile.Close()
 		return nil, fmt.Errorf("start firecracker: %w", err)
 	}
+	_ = logFile.Close()
 
 	if err := waitRunning(cmd); err != nil {
 		return nil, err

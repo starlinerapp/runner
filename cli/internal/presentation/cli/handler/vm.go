@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"starliner.app/runner/internal/application"
+	"starliner.app/runner/internal/infrastructure/firecracker/config"
 )
 
 type VMHandler struct {
@@ -66,6 +67,7 @@ func (vh *VMHandler) newListVMCmd() *cobra.Command {
 				fmt.Printf("  subnet:      172.16.%d.0/24\n", vm.SubnetOctet)
 				fmt.Printf("  guest cid:   %d\n", vm.GuestCID)
 				fmt.Printf("  workspace:   %s\n", vm.Dir)
+				fmt.Printf("  log:         %s\n", config.LogPath(vm.Dir))
 				fmt.Printf("  firecracker: pid %d\n", vm.FirecrackerPID)
 				fmt.Printf("  created:     %s\n", vm.CreatedAt.Format("2006-01-02 15:04:05 UTC"))
 				fmt.Println()
