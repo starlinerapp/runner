@@ -41,11 +41,15 @@
                     cp ${initrd}/${initrdFile} $out/initrd
                 '';
 
-                buildkit-runner-firecracker-config = lib.path.toFile "firecracker.json" (lib.generators.toJSON {
+                buildkit-runner-firecracker-config = buildkitRunner.pkgs.writeText "firecracker.json" (lib.generators.toJSON {
                     "boot-source" = {
                         kernel_image_path = "./vmlinux";
                         initrd_path = "./initrd";
-                        boot_args = lib.concatStringsSep " " cfg.boot.kernelParams;
+                        boot_args = lib.concatStringsSep " " (
+                            cfg.boot.kernelParams ++ [
+                                "init=${cfg.system.build.toplevel}/init"
+                            ]
+                        );
                     };
                     drives = [
                         {

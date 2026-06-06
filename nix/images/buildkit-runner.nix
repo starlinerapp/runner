@@ -27,7 +27,6 @@
     "panic=1"
     "pci=off"
     "root=/dev/vda"
-    "init=${config.system.build.toplevel}/init"
   ];
 
   services.openssh.enable = true;
