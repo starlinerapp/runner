@@ -1,6 +1,8 @@
-# runner
+# Starliner Runner
 
-## Quick Start
+The runner is the application that runs the builds in Starliner.
+
+## Get Started
 Download the latest release 
 ```
 curl -L -o runner-v0.0.1-linux-amd64.tar https://github.com/starlinerapp/runner/releases/download/v0.0.1/runner-v0.0.1-linux-amd64.tar
