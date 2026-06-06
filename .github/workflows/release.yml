@@ -1,0 +1,87 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag (e.g. v0.1.0)"
+        required: true
+        type: string
+
+jobs:
+  release:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: DeterminateSystems/determinate-nix-action@v3
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: cli/go.mod
+          cache-dependency-path: cli/go.sum
+
+      - name: Build Firecracker assets
+        run: |
+          nix build .#buildkit-runner-rootfs --out-link result-rootfs
+          nix build .#buildkit-runner-vmlinux --out-link result-kernel
+          nix build .#buildkit-runner-initrd --out-link result-initrd
+
+      - name: Build runner CLI
+        working-directory: cli
+        run: go build -o ../build/runner ./cmd/main.go
+
+      - name: Package release bundle
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          bundle="runner-${RELEASE_TAG}-linux-amd64"
+          mkdir -p "dist/${bundle}"
+
+          cp build/runner "dist/${bundle}/runner"
+          chmod +x "dist/${bundle}/runner"
+          cp -L result-kernel/vmlinux "dist/${bundle}/vmlinux"
+          cp -L result-initrd/initrd "dist/${bundle}/initrd"
+          cp -L result-rootfs/rootfs.img "dist/${bundle}/rootfs.ext4"
+
+          test -f "dist/${bundle}/runner"
+          test -f "dist/${bundle}/vmlinux"
+          test -f "dist/${bundle}/initrd"
+          test -f "dist/${bundle}/rootfs.ext4"
+
+          tar -C dist -cf "dist/${bundle}.tar" "${bundle}"
+
+          bundle_size=$(stat -c%s "dist/${bundle}.tar")
+          max_size=2147483648
+          if [ "$bundle_size" -ge "$max_size" ]; then
+            echo "Release bundle is ${bundle_size} bytes; GitHub release assets must be under 2 GiB." >&2
+            exit 1
+          fi
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag }}
+          name: Runner ${{ inputs.release_tag }}
+          generate_release_notes: true
+          body: |
+            ## Runner bundle
+
+            Download `runner-${{ inputs.release_tag }}-linux-amd64.tar`, extract, and create a VM:
+
+            ```bash
+            tar xf runner-${{ inputs.release_tag }}-linux-amd64.tar
+            cd runner-${{ inputs.release_tag }}-linux-amd64
+            sudo ./runner vm create
+            ```
+
+            The bundle contains:
+            - `runner` — CLI
+            - `vmlinux` — kernel
+            - `initrd` — initramfs
+            - `rootfs.ext4` — root disk
+          files: |
+            dist/runner-${{ inputs.release_tag }}-linux-amd64.tar

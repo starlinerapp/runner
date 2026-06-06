@@ -13,7 +13,7 @@
             inherit system;
 
             modules = [
-                ./nix/images/buildkit-runner.nix
+                ./nix/systems/buildkit-runner.nix
             ];
         };
     in
@@ -25,8 +25,6 @@
                 kernel = buildkitRunner.config.boot.kernelPackages.kernel;
                 initrd = buildkitRunner.config.system.build.initialRamdisk;
                 initrdFile = buildkitRunner.config.system.boot.loader.initrdFile;
-                cfg = buildkitRunner.config;
-                inherit (buildkitRunner.pkgs) lib;
             in
             {
                 buildkit-runner-kernel = kernel.dev;
@@ -40,37 +38,6 @@
                     mkdir -p $out
                     cp ${initrd}/${initrdFile} $out/initrd
                 '';
-
-                buildkit-runner-firecracker-config = buildkitRunner.pkgs.writeText "firecracker.json" (builtins.toJSON {
-                    "boot-source" = {
-                        kernel_image_path = "./vmlinux";
-                        initrd_path = "./initrd";
-                        boot_args = lib.concatStringsSep " " (
-                            cfg.boot.kernelParams ++ [
-                                "init=${cfg.system.build.toplevel}/init"
-                            ]
-                        );
-                    };
-                    drives = [
-                        {
-                            drive_id = "rootfs";
-                            path_on_host = "./rootfs.ext4";
-                            is_root_device = true;
-                            is_read_only = false;
-                        }
-                    ];
-                    network-interfaces = [
-                        {
-                            iface_id = "eth0";
-                            guest_mac = "AA:FC:00:00:00:01";
-                            host_dev_name = "tap0";
-                        }
-                    ];
-                    "machine-config" = {
-                        vcpu_count = 2;
-                        mem_size_mib = 2048;
-                    };
-                });
 
                 buildkit-runner-rootfs = import "${nixpkgs}/nixos/lib/make-disk-image.nix" {
                     pkgs = buildkitRunner.pkgs;

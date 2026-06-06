@@ -1,0 +1,37 @@
+package firecracker
+
+import (
+	"starliner.app/runner/internal/domain/port"
+	"starliner.app/runner/internal/infrastructure/firecracker/assets"
+	"starliner.app/runner/internal/infrastructure/firecracker/install"
+	"starliner.app/runner/internal/infrastructure/firecracker/vm"
+)
+
+type Client struct{}
+
+func NewClient() port.VM {
+	return &Client{}
+}
+
+func (c *Client) Create() error {
+	if err := install.Ensure(); err != nil {
+		return err
+	}
+
+	assetsDir, err := assets.ResolveDir()
+	if err != nil {
+		return err
+	}
+
+	if err := assets.Validate(assetsDir); err != nil {
+		return err
+	}
+
+	record, err := vm.Create(assetsDir)
+	if err != nil {
+		return err
+	}
+
+	vm.PrintSummary(record)
+	return nil
+}

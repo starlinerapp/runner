@@ -5,6 +5,7 @@
     "${modulesPath}/profiles/minimal.nix"
     ../modules/buildkit.nix
     ../modules/networking.nix
+    ../modules/firecracker.nix
   ];
 
   system.stateVersion = "26.05";
