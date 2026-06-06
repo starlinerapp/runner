@@ -1,5 +1,6 @@
 {
   networking.useDHCP = true;
+  networking.useNetworkd = true;
 
   networking.firewall.enable = false;
 
