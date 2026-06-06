@@ -4,15 +4,17 @@ import (
 	"os"
 	"time"
 
+	"starliner.app/runner/internal/domain/port"
+	"starliner.app/runner/internal/domain/value"
+	"starliner.app/runner/internal/infrastructure/firecracker/allocate"
 	"starliner.app/runner/internal/infrastructure/firecracker/network"
-	"starliner.app/runner/internal/infrastructure/firecracker/registry"
 )
 
-func Create(assetsDir string) (*registry.Record, error) {
-	var record *registry.Record
+func Create(reg port.VMRegistry, assetsDir string) (*value.VM, error) {
+	var record *value.VM
 
-	err := registry.WithLock(func(reg *registry.Registry) error {
-		res, err := registry.Allocate(reg)
+	err := reg.WithLock(func(m port.MutableVMRegistry) error {
+		res, err := allocate.ForFleet(m.VMs())
 		if err != nil {
 			return err
 		}
@@ -35,7 +37,7 @@ func Create(assetsDir string) (*registry.Record, error) {
 			return err
 		}
 
-		rec := registry.Record{
+		rec := value.VM{
 			ID:             res.ID,
 			Dir:            dir,
 			Tap:            res.Tap,
@@ -47,7 +49,7 @@ func Create(assetsDir string) (*registry.Record, error) {
 			CreatedAt:      time.Now().UTC(),
 		}
 
-		reg.VMs = append(reg.VMs, rec)
+		m.Add(rec)
 		record = &rec
 		return nil
 	})

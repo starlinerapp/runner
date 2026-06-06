@@ -4,7 +4,5 @@ import "go.uber.org/fx"
 
 var Module = fx.Module(
 	"firecracker",
-	fx.Provide(
-		NewClient,
-	),
+	fx.Provide(NewClient),
 )

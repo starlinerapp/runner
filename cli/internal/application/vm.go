@@ -2,6 +2,7 @@ package application
 
 import (
 	"starliner.app/runner/internal/domain/port"
+	"starliner.app/runner/internal/domain/value"
 )
 
 type VMApplication struct {
@@ -18,4 +19,12 @@ func NewVMApplication(
 
 func (vm *VMApplication) CreateVM() error {
 	return vm.VM.Create()
+}
+
+func (vm *VMApplication) ListVMs() ([]value.VM, error) {
+	return vm.VM.List()
+}
+
+func (vm *VMApplication) DeleteVM(id string) error {
+	return vm.VM.Delete(id)
 }

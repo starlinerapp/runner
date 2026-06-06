@@ -3,10 +3,10 @@ package vm
 import (
 	"fmt"
 
-	"starliner.app/runner/internal/infrastructure/firecracker/registry"
+	domainvm "starliner.app/runner/internal/domain/value"
 )
 
-func PrintSummary(rec *registry.Record) {
+func PrintSummary(rec *domainvm.VM) {
 	fmt.Printf("VM %s created\n", rec.ID)
 	fmt.Printf("  tap:         %s\n", rec.Tap)
 	fmt.Printf("  mac:         %s\n", rec.MAC)

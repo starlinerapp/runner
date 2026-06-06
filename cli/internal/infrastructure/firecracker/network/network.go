@@ -3,6 +3,7 @@ package network
 import (
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -130,6 +131,18 @@ func (n *Host) Teardown() {
 
 	if n.createdTap {
 		_ = runPrivileged("ip", "link", "del", n.tap)
+	}
+}
+
+func Destroy(tap string, dnsmasqPID int) {
+	if dnsmasqPID > 0 {
+		if proc, err := os.FindProcess(dnsmasqPID); err == nil {
+			_ = proc.Kill()
+		}
+	}
+
+	if linkExists(tap) {
+		_ = runPrivileged("ip", "link", "del", tap)
 	}
 }
 

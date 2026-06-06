@@ -8,9 +8,10 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"starliner.app/runner/internal/infrastructure/firecracker/allocate"
 	"starliner.app/runner/internal/infrastructure/firecracker/assets"
 	"starliner.app/runner/internal/infrastructure/firecracker/config"
-	"starliner.app/runner/internal/infrastructure/firecracker/registry"
+	"starliner.app/runner/internal/infrastructure/registry"
 )
 
 func Start(vmDir string) (*exec.Cmd, error) {
@@ -59,7 +60,7 @@ func copyRootfs(src, dst string) error {
 	return nil
 }
 
-func prepareWorkspace(assetsDir string, res registry.Resources) (string, error) {
+func prepareWorkspace(assetsDir string, res allocate.Resources) (string, error) {
 	dir, err := registry.VMDir(res.ID)
 	if err != nil {
 		return "", err
