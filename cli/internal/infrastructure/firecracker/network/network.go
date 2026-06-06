@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"io"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -60,28 +61,26 @@ func Setup(tap string, subnetOctet int) (*Host, error) {
 		return nil, err
 	}
 
-	if err := runPrivileged(
-		"iptables", "-C", "FORWARD", "-i", tap, "-o", egress, "-j", "ACCEPT",
+	if err := ensureIptablesRule(
+		[]string{"-C", "FORWARD", "-i", tap, "-o", egress, "-j", "ACCEPT"},
+		[]string{"-A", "FORWARD", "-i", tap, "-o", egress, "-j", "ACCEPT"},
 	); err != nil {
-		if err := runPrivileged(
-			"iptables", "-A", "FORWARD", "-i", tap, "-o", egress, "-j", "ACCEPT",
-		); err != nil {
-			setup.Teardown()
-			return nil, fmt.Errorf("configure forward rule: %w", err)
-		}
+		setup.Teardown()
+		return nil, fmt.Errorf("configure forward rule: %w", err)
 	}
 
-	if err := runPrivileged(
-		"iptables", "-C", "FORWARD", "-i", egress, "-o", tap,
-		"-m", "state", "--state", "RELATED,ESTABLISHED", "-j", "ACCEPT",
-	); err != nil {
-		if err := runPrivileged(
-			"iptables", "-A", "FORWARD", "-i", egress, "-o", tap,
+	if err := ensureIptablesRule(
+		[]string{
+			"-C", "FORWARD", "-i", egress, "-o", tap,
 			"-m", "state", "--state", "RELATED,ESTABLISHED", "-j", "ACCEPT",
-		); err != nil {
-			setup.Teardown()
-			return nil, fmt.Errorf("configure return traffic rule: %w", err)
-		}
+		},
+		[]string{
+			"-A", "FORWARD", "-i", egress, "-o", tap,
+			"-m", "state", "--state", "RELATED,ESTABLISHED", "-j", "ACCEPT",
+		},
+	); err != nil {
+		setup.Teardown()
+		return nil, fmt.Errorf("configure return traffic rule: %w", err)
 	}
 
 	dnsmasq, err := startDHCP(tap, dhcpRange, gateway)
@@ -95,16 +94,26 @@ func Setup(tap string, subnetOctet int) (*Host, error) {
 }
 
 func ensureNAT(egress string) error {
-	if err := runPrivileged(
-		"iptables", "-t", "nat", "-C", "POSTROUTING", "-o", egress, "-j", "MASQUERADE",
+	if err := ensureIptablesRule(
+		[]string{"-t", "nat", "-C", "POSTROUTING", "-o", egress, "-j", "MASQUERADE"},
+		[]string{"-t", "nat", "-A", "POSTROUTING", "-o", egress, "-j", "MASQUERADE"},
 	); err != nil {
-		if err := runPrivileged(
-			"iptables", "-t", "nat", "-A", "POSTROUTING", "-o", egress, "-j", "MASQUERADE",
-		); err != nil {
-			return fmt.Errorf("configure NAT: %w", err)
-		}
+		return fmt.Errorf("configure NAT: %w", err)
 	}
 	return nil
+}
+
+func ensureIptablesRule(checkArgs, addArgs []string) error {
+	if hasIptablesRule(checkArgs...) {
+		return nil
+	}
+	return runPrivileged("iptables", addArgs...)
+}
+
+func hasIptablesRule(args ...string) bool {
+	cmd := privilegedCommand("iptables", args...)
+	cmd.Stderr = io.Discard
+	return cmd.Run() == nil
 }
 
 func (n *Host) DNSMasqPID() int {
