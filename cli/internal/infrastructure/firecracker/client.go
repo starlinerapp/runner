@@ -27,6 +27,10 @@ func (c *Client) Create() error {
 		return err
 	}
 
+	if err := assets.EnsureRootfs(assetsDir); err != nil {
+		return err
+	}
+
 	record, err := vm.Create(assetsDir)
 	if err != nil {
 		return err

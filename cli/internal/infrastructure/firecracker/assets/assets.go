@@ -2,20 +2,23 @@ package assets
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/klauspost/compress/zstd"
 )
 
 const (
-	KernelImage = "vmlinux"
-	InitrdImage = "initrd"
-	RootfsImage = "rootfs.ext4"
+	KernelImage           = "vmlinux"
+	InitrdImage           = "initrd"
+	RootfsImage           = "rootfs.ext4"
+	RootfsImageCompressed = "rootfs.ext4.zst"
 )
 
 var required = []string{
 	KernelImage,
 	InitrdImage,
-	RootfsImage,
 }
 
 func ResolveDir() (string, error) {
@@ -38,6 +41,78 @@ func Validate(dir string) error {
 			return fmt.Errorf("missing asset %q in %s: %w", name, dir, err)
 		}
 	}
+
+	if err := rootfsPresent(dir); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func rootfsPresent(dir string) error {
+	for _, name := range []string{RootfsImage, RootfsImageCompressed} {
+		if _, err := os.Stat(filepath.Join(dir, name)); err == nil {
+			return nil
+		}
+	}
+
+	return fmt.Errorf(
+		"missing asset %q or %q in %s",
+		RootfsImage,
+		RootfsImageCompressed,
+		dir,
+	)
+}
+
+func EnsureRootfs(dir string) error {
+	uncompressed := filepath.Join(dir, RootfsImage)
+	if _, err := os.Stat(uncompressed); err == nil {
+		return nil
+	}
+
+	compressed := filepath.Join(dir, RootfsImageCompressed)
+	if _, err := os.Stat(compressed); err != nil {
+		return fmt.Errorf("rootfs asset: %w", err)
+	}
+
+	in, err := os.Open(compressed)
+	if err != nil {
+		return fmt.Errorf("open compressed rootfs: %w", err)
+	}
+	defer func() { _ = in.Close() }()
+
+	decoder, err := zstd.NewReader(in)
+	if err != nil {
+		return fmt.Errorf("create zstd decoder: %w", err)
+	}
+	defer decoder.Close()
+
+	tmp, err := os.CreateTemp(dir, RootfsImage+".*")
+	if err != nil {
+		return fmt.Errorf("create temp rootfs: %w", err)
+	}
+	tmpPath := tmp.Name()
+
+	cleanup := func() {
+		_ = tmp.Close()
+		_ = os.Remove(tmpPath)
+	}
+
+	if _, err := io.Copy(tmp, decoder); err != nil {
+		cleanup()
+		return fmt.Errorf("decompress rootfs: %w", err)
+	}
+
+	if err := tmp.Close(); err != nil {
+		cleanup()
+		return fmt.Errorf("close temp rootfs: %w", err)
+	}
+
+	if err := os.Rename(tmpPath, uncompressed); err != nil {
+		cleanup()
+		return fmt.Errorf("install rootfs: %w", err)
+	}
+
 	return nil
 }
 

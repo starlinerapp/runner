@@ -46,12 +46,12 @@ jobs:
           chmod +x "dist/${bundle}/runner"
           cp -L result-kernel/vmlinux "dist/${bundle}/vmlinux"
           cp -L result-initrd/initrd "dist/${bundle}/initrd"
-          cp -L result-rootfs/rootfs.img "dist/${bundle}/rootfs.ext4"
+          zstd -T0 -19 -f -o "dist/${bundle}/rootfs.ext4.zst" result-rootfs/rootfs.img
 
           test -f "dist/${bundle}/runner"
           test -f "dist/${bundle}/vmlinux"
           test -f "dist/${bundle}/initrd"
-          test -f "dist/${bundle}/rootfs.ext4"
+          test -f "dist/${bundle}/rootfs.ext4.zst"
 
           tar -C dist -cf "dist/${bundle}.tar" "${bundle}"
 
@@ -82,6 +82,6 @@ jobs:
             - `runner` — CLI
             - `vmlinux` — kernel
             - `initrd` — initramfs
-            - `rootfs.ext4` — root disk
+            - `rootfs.ext4.zst` — compressed root disk (decompressed automatically on first `vm create`)
           files: |
             dist/runner-${{ inputs.release_tag }}-linux-amd64.tar
