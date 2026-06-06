@@ -1,0 +1,30 @@
+name: CLI Linters
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    if: '! github.event.pull_request.draft'
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.4"
+
+      - name: Run linter
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.11
+          working-directory: cli
+
+      - name: Run vulnerabilities check
+        run: |
+          go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+        working-directory: cli
