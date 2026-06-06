@@ -11,6 +11,7 @@ import (
 func Register(
 	lc fx.Lifecycle,
 	sd fx.Shutdowner,
+	install *handler.InstallHandler,
 	vm *handler.VMHandler,
 ) {
 	rootCmd := &cobra.Command{
@@ -25,6 +26,7 @@ func Register(
 	}
 
 	rootCmd.AddCommand(
+		install.NewInstallCmd(),
 		vm.NewVMCmd(),
 	)
 

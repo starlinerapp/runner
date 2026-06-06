@@ -7,10 +7,6 @@ import (
 )
 
 func StateDir() (string, error) {
-	if dir := os.Getenv("RUNNER_STATE_DIR"); dir != "" {
-		return dir, nil
-	}
-
 	base, err := os.UserCacheDir()
 	if err != nil {
 		return "", fmt.Errorf("resolve state dir: %w", err)

@@ -8,6 +8,8 @@ import (
 	"runtime"
 	"strings"
 	"syscall"
+
+	"starliner.app/runner/internal/infrastructure/privileged"
 )
 
 type Host struct {
@@ -29,23 +31,23 @@ func Setup(tap string, subnetOctet int) (*Host, error) {
 	setup := &Host{tap: tap}
 
 	if !linkExists(tap) {
-		if err := runPrivileged("ip", "tuntap", "add", "dev", tap, "mode", "tap"); err != nil {
+		if err := privileged.Run("ip", "tuntap", "add", "dev", tap, "mode", "tap"); err != nil {
 			return nil, fmt.Errorf("create %s: %w", tap, err)
 		}
 		setup.createdTap = true
 	}
 
-	if err := runPrivileged("ip", "addr", "replace", hostCIDR, "dev", tap); err != nil {
+	if err := privileged.Run("ip", "addr", "replace", hostCIDR, "dev", tap); err != nil {
 		setup.Teardown()
 		return nil, fmt.Errorf("configure %s address: %w", tap, err)
 	}
 
-	if err := runPrivileged("ip", "link", "set", "dev", tap, "up"); err != nil {
+	if err := privileged.Run("ip", "link", "set", "dev", tap, "up"); err != nil {
 		setup.Teardown()
 		return nil, fmt.Errorf("bring up %s: %w", tap, err)
 	}
 
-	if err := runPrivileged("sysctl", "-w", "net.ipv4.ip_forward=1"); err != nil {
+	if err := privileged.Run("sysctl", "-w", "net.ipv4.ip_forward=1"); err != nil {
 		setup.Teardown()
 		return nil, fmt.Errorf("enable ip forwarding: %w", err)
 	}
@@ -108,11 +110,11 @@ func ensureIptablesRule(checkArgs, addArgs []string) error {
 	if hasIptablesRule(checkArgs...) {
 		return nil
 	}
-	return runPrivileged("iptables", addArgs...)
+	return privileged.Run("iptables", addArgs...)
 }
 
 func hasIptablesRule(args ...string) bool {
-	cmd := privilegedCommand("iptables", args...)
+	cmd := privileged.Command("iptables", args...)
 	cmd.Stderr = io.Discard
 	return cmd.Run() == nil
 }
@@ -130,7 +132,7 @@ func (n *Host) Teardown() {
 	}
 
 	if n.createdTap {
-		_ = runPrivileged("ip", "link", "del", n.tap)
+		_ = privileged.Run("ip", "link", "del", n.tap)
 	}
 }
 
@@ -142,7 +144,7 @@ func Destroy(tap string, dnsmasqPID int) {
 	}
 
 	if linkExists(tap) {
-		_ = runPrivileged("ip", "link", "del", tap)
+		_ = privileged.Run("ip", "link", "del", tap)
 	}
 }
 
@@ -151,7 +153,7 @@ func startDHCP(tap, dhcpRange, gateway string) (*exec.Cmd, error) {
 		return nil, fmt.Errorf("dnsmasq not found (required for guest DHCP): %w", err)
 	}
 
-	cmd := privilegedCommand(
+	cmd := privileged.Command(
 		"dnsmasq",
 		"--keep-in-foreground",
 		"--bind-interfaces",

@@ -74,12 +74,13 @@ jobs:
           body: |
             ## Runner bundle
 
-            Download `runner-${{ inputs.release_tag }}-linux-amd64.tar`, extract, and create a VM:
+            Download `runner-${{ inputs.release_tag }}-linux-amd64.tar`, extract, install, and create a VM:
 
             ```bash
             tar xf runner-${{ inputs.release_tag }}-linux-amd64.tar
             cd runner-${{ inputs.release_tag }}-linux-amd64
-            sudo ./runner vm create
+            ./runner install
+            runner vm create
             ```
 
             The bundle contains:
@@ -87,6 +88,6 @@ jobs:
             - `vmlinux` — kernel
             - `initrd` — initramfs
             - `boot.args` — kernel command line matched to the rootfs
-            - `rootfs.ext4.zst` — compressed root disk (decompressed automatically on first `vm create`)
+            - `rootfs.ext4.zst` — compressed root disk
           files: |
             dist/runner-${{ inputs.release_tag }}-linux-amd64.tar

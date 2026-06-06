@@ -1,18 +1,18 @@
-package network
+package privileged
 
 import (
 	"os"
 	"os/exec"
 )
 
-func runPrivileged(name string, args ...string) error {
-	cmd := privilegedCommand(name, args...)
+func Run(name string, args ...string) error {
+	cmd := Command(name, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
 
-func privilegedCommand(name string, args ...string) *exec.Cmd {
+func Command(name string, args ...string) *exec.Cmd {
 	if os.Geteuid() == 0 {
 		return exec.Command(name, args...)
 	}

@@ -10,6 +10,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+
+	"starliner.app/runner/internal/infrastructure/privileged"
 )
 
 const version = "v1.16.0"
@@ -107,18 +109,30 @@ func extractBinary(tgzPath, binaryName, target string) error {
 		}
 
 		if filepath.Base(hdr.Name) == binaryName {
-			out, err := os.Create(target)
+			tmp, err := os.CreateTemp("", "firecracker-*")
 			if err != nil {
 				return err
 			}
-			defer func(out *os.File) {
-				_ = out.Close()
-			}(out)
+			tmpPath := tmp.Name()
 
-			if _, err := io.Copy(out, tr); err != nil {
+			if _, err := io.Copy(tmp, tr); err != nil {
+				_ = tmp.Close()
+				_ = os.Remove(tmpPath)
 				return err
 			}
-			return os.Chmod(target, 0755)
+
+			if err := tmp.Close(); err != nil {
+				_ = os.Remove(tmpPath)
+				return err
+			}
+
+			if err := privileged.Run("install", "-m", "0755", tmpPath, target); err != nil {
+				_ = os.Remove(tmpPath)
+				return err
+			}
+
+			_ = os.Remove(tmpPath)
+			return nil
 		}
 	}
 	return fmt.Errorf("firecracker binary %q not found in %s", binaryName, tgzPath)
