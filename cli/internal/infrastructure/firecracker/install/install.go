@@ -39,8 +39,13 @@ func Ensure() error {
 		return err
 	}
 
+	binaryName, err := releaseBinaryName(version)
+	if err != nil {
+		return err
+	}
+
 	fmt.Println("Extracting...")
-	if err := extractBinary(archivePath, "/usr/local/bin/firecracker"); err != nil {
+	if err := extractBinary(archivePath, binaryName, "/usr/local/bin/firecracker"); err != nil {
 		return err
 	}
 
@@ -73,7 +78,7 @@ func downloadFile(url, dest string) error {
 	return err
 }
 
-func extractBinary(tgzPath, target string) error {
+func extractBinary(tgzPath, binaryName, target string) error {
 	file, err := os.Open(tgzPath)
 	if err != nil {
 		return err
@@ -101,7 +106,7 @@ func extractBinary(tgzPath, target string) error {
 			return err
 		}
 
-		if filepath.Base(hdr.Name) == "firecracker" {
+		if filepath.Base(hdr.Name) == binaryName {
 			out, err := os.Create(target)
 			if err != nil {
 				return err
@@ -116,18 +121,33 @@ func extractBinary(tgzPath, target string) error {
 			return os.Chmod(target, 0755)
 		}
 	}
-	return fmt.Errorf("firecracker binary not found in %s", tgzPath)
+	return fmt.Errorf("firecracker binary %q not found in %s", binaryName, tgzPath)
+}
+
+func releaseArch() (string, error) {
+	switch runtime.GOARCH {
+	case "amd64":
+		return "x86_64", nil
+	case "arm64":
+		return "aarch64", nil
+	default:
+		return "", fmt.Errorf("unsupported architecture %q", runtime.GOARCH)
+	}
+}
+
+func releaseBinaryName(version string) (string, error) {
+	arch, err := releaseArch()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("firecracker-%s-%s", version, arch), nil
 }
 
 func downloadURL(version string) (string, error) {
-	var arch string
-	switch runtime.GOARCH {
-	case "amd64":
-		arch = "x86_64"
-	case "arm64":
-		arch = "aarch64"
-	default:
-		return "", fmt.Errorf("unsupported architecture %q", runtime.GOARCH)
+	arch, err := releaseArch()
+	if err != nil {
+		return "", err
 	}
 
 	return fmt.Sprintf(
