@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"starliner.app/runner/internal/infrastructure/firecracker/assets"
 )
@@ -47,9 +48,14 @@ type networkInterfaceConfig struct {
 	HostDevName string `json:"host_dev_name"`
 }
 
+func SocketPath(vmDir string) string {
+	return filepath.Join(vmDir, SocketName)
+}
+
 func Write(destPath, tap, mac string) error {
+	vmDir := filepath.Dir(destPath)
 	cfg := vmConfig{}
-	cfg.APISocket.Path = "./" + SocketName
+	cfg.APISocket.Path = SocketPath(vmDir)
 	cfg.APISocket.UpdatePath = false
 	cfg.BootSource.KernelImagePath = "./" + assets.KernelImage
 	cfg.BootSource.InitrdPath = "./" + assets.InitrdImage

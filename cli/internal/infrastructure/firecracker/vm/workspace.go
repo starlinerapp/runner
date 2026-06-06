@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"syscall"
+	"time"
 
 	"starliner.app/runner/internal/infrastructure/firecracker/allocate"
 	"starliner.app/runner/internal/infrastructure/firecracker/assets"
@@ -16,8 +17,13 @@ import (
 
 func Start(vmDir string) (*exec.Cmd, error) {
 	configPath := filepath.Join(vmDir, config.FileName)
+	socketPath := config.SocketPath(vmDir)
 
-	cmd := exec.Command("firecracker", "--config-file", configPath)
+	if err := os.Remove(socketPath); err != nil && !os.IsNotExist(err) {
+		return nil, fmt.Errorf("remove stale api socket: %w", err)
+	}
+
+	cmd := exec.Command("firecracker", "--api-sock", socketPath, "--config-file", configPath)
 	cmd.Dir = vmDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -28,7 +34,26 @@ func Start(vmDir string) (*exec.Cmd, error) {
 		return nil, fmt.Errorf("start firecracker: %w", err)
 	}
 
+	if err := waitRunning(cmd); err != nil {
+		return nil, err
+	}
+
 	return cmd, nil
+}
+
+func waitRunning(cmd *exec.Cmd) error {
+	done := make(chan error, 1)
+	go func() { done <- cmd.Wait() }()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			return fmt.Errorf("firecracker exited: %w", err)
+		}
+		return fmt.Errorf("firecracker exited immediately")
+	case <-time.After(200 * time.Millisecond):
+		return nil
+	}
 }
 
 func copyRootfs(src, dst string) error {
