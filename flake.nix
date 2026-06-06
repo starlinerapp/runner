@@ -45,7 +45,10 @@
                     cp ${initrd}/${initrdFile} $out/initrd
                 '';
 
-                buildkit-runner-bootargs = buildkitRunner.pkgs.writeText "boot.args" bootArgs;
+                buildkit-runner-bootargs = buildkitRunner.pkgs.runCommand "buildkit-runner-bootargs" { } ''
+                    mkdir -p $out
+                    cp ${buildkitRunner.pkgs.writeText "boot.args" bootArgs} $out/boot.args
+                '';
 
                 buildkit-runner-rootfs = import "${nixpkgs}/nixos/lib/make-disk-image.nix" {
                     pkgs = buildkitRunner.pkgs;
