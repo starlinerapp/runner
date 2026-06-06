@@ -22,13 +22,13 @@ runner vm list
 runner vm delete <id>
 ```
 
-`./runner install` is a one-time step run from the extracted bundle. It installs the CLI, VM assets, and Firecracker.
+`./runner install` is a one-time step run from the extracted bundle. It installs the CLI, VM assets, Firecracker, and BuildKit.
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `runner install` | Install the CLI, assets, and Firecracker to the host |
+| `runner install` | Install the CLI, assets, Firecracker, and BuildKit to the host |
 | `runner vm create` | Provision a new microVM |
 | `runner vm list` | List running VMs |
 | `runner vm delete <id>` | Stop and remove a VM |
@@ -53,6 +53,8 @@ After install:
 |------|----------|
 | `/usr/local/bin/runner` | CLI binary |
 | `/usr/local/bin/firecracker` | Firecracker binary (installed if missing) |
+| `/usr/local/bin/buildkitd` | BuildKit daemon (installed if missing) |
+| `/usr/local/bin/buildctl` | BuildKit CLI (installed if missing) |
 | `/usr/local/share/runner/` | `vmlinux`, `initrd`, `boot.args`, decompressed `rootfs.ext4` |
 
 At runtime:

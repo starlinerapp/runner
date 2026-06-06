@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"starliner.app/runner/internal/domain/port"
+	buildkitinstall "starliner.app/runner/internal/infrastructure/buildkit/install"
 	"starliner.app/runner/internal/infrastructure/firecracker/assets"
 	"starliner.app/runner/internal/infrastructure/firecracker/install"
 	"starliner.app/runner/internal/infrastructure/privileged"
@@ -56,6 +57,10 @@ func (c *Client) Install() error {
 	}
 
 	if err := install.Ensure(); err != nil {
+		return err
+	}
+
+	if err := buildkitinstall.Ensure(); err != nil {
 		return err
 	}
 
