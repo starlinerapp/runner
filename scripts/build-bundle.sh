@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+export NIX_CONFIG="extra-experimental-features = nix-command flakes ${NIX_CONFIG:-}"
+
 RELEASE_TAG="${RELEASE_TAG:-dev}"
 bundle="runner-${RELEASE_TAG}-linux-amd64"
 
