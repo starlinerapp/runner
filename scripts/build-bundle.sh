@@ -33,4 +33,8 @@ zstd -T0 -19 -f -o "dist/${bundle}/rootfs.ext4.zst" result-rootfs/rootfs.img
 
 tar -C dist -cf "dist/${bundle}.tar" "${bundle}"
 
+echo "==> Cleaning up build artifacts"
+rm -f result-rootfs result-kernel result-initrd result-bootargs
+rm -rf build
+
 echo "==> Done: dist/${bundle}.tar"
