@@ -104,6 +104,7 @@ func printVM(action string, vm value.VM) {
 	}
 	fmt.Printf("  tap:         %s\n", vm.Tap)
 	fmt.Printf("  mac:         %s\n", vm.MAC)
+	fmt.Printf("  ip:          %s\n", vm.GuestIP)
 	fmt.Printf("  subnet:      172.16.%d.0/24\n", vm.SubnetOctet)
 	fmt.Printf("  guest cid:   %d\n", vm.GuestCID)
 	fmt.Printf("  workspace:   %s\n", vm.Dir)

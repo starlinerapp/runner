@@ -19,7 +19,7 @@ type Host struct {
 	createdTap bool
 }
 
-func Setup(tap string, subnetOctet int) (*Host, error) {
+func Setup(tap string, subnetOctet int, mac string) (*Host, error) {
 	if runtime.GOOS != "linux" {
 		return nil, fmt.Errorf("network setup requires linux")
 	}
@@ -86,7 +86,7 @@ func Setup(tap string, subnetOctet int) (*Host, error) {
 		return nil, fmt.Errorf("configure return traffic rule: %w", err)
 	}
 
-	dnsmasq, err := startDHCP(tap, dhcpRange, gateway)
+	dnsmasq, err := startDHCP(tap, dhcpRange, gateway, mac, GuestIP(subnetOctet))
 	if err != nil {
 		setup.Teardown()
 		return nil, err
@@ -148,7 +148,7 @@ func Destroy(tap string, dnsmasqPID int) {
 	}
 }
 
-func startDHCP(tap, dhcpRange, gateway string) (*exec.Cmd, error) {
+func startDHCP(tap, dhcpRange, gateway, mac, guestIP string) (*exec.Cmd, error) {
 	if _, err := exec.LookPath("dnsmasq"); err != nil {
 		return nil, fmt.Errorf("dnsmasq not found (required for guest DHCP): %w", err)
 	}
@@ -159,6 +159,7 @@ func startDHCP(tap, dhcpRange, gateway string) (*exec.Cmd, error) {
 		"--bind-interfaces",
 		"--interface="+tap,
 		"--dhcp-range="+dhcpRange,
+		"--dhcp-host="+mac+","+guestIP,
 		"--dhcp-option=option:router,"+gateway,
 		"--dhcp-option=option:dns-server,8.8.8.8",
 	)

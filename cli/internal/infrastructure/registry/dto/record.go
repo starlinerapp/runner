@@ -12,6 +12,7 @@ type RecordDTO struct {
 	Dir            string `json:"dir"`
 	Tap            string `json:"tap"`
 	MAC            string `json:"mac"`
+	GuestIP        string `json:"guest_ip,omitempty"`
 	SubnetOctet    int    `json:"subnet_octet"`
 	GuestCID       uint32 `json:"guest_cid"`
 	FirecrackerPID int    `json:"firecracker_pid"`
@@ -25,6 +26,7 @@ func ToDTO(vm value.VM) (RecordDTO, error) {
 		Dir:            vm.Dir,
 		Tap:            vm.Tap,
 		MAC:            vm.MAC,
+		GuestIP:        vm.GuestIP,
 		SubnetOctet:    vm.SubnetOctet,
 		GuestCID:       vm.GuestCID,
 		FirecrackerPID: vm.FirecrackerPID,
@@ -47,6 +49,7 @@ func FromDTO(dto RecordDTO) (value.VM, error) {
 		Dir:            dto.Dir,
 		Tap:            dto.Tap,
 		MAC:            dto.MAC,
+		GuestIP:        dto.GuestIP,
 		SubnetOctet:    dto.SubnetOctet,
 		GuestCID:       dto.GuestCID,
 		FirecrackerPID: dto.FirecrackerPID,

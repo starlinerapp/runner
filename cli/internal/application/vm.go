@@ -43,6 +43,7 @@ func (a *VMApplication) CreateVM() (*value.VM, error) {
 			Dir:            provisioned.Dir,
 			Tap:            res.Tap,
 			MAC:            res.MAC,
+			GuestIP:        provisioned.GuestIP,
 			SubnetOctet:    res.SubnetOctet,
 			GuestCID:       res.GuestCID,
 			FirecrackerPID: provisioned.FirecrackerPID,

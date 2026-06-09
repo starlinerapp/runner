@@ -4,6 +4,7 @@ import "starliner.app/runner/internal/domain/value"
 
 type ProvisionResult struct {
 	Dir            string
+	GuestIP        string
 	FirecrackerPID int
 	DNSMasqPID     int
 }
