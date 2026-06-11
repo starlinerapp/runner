@@ -1,6 +1,9 @@
 package application
 
-import "go.uber.org/fx"
+import (
+	"go.uber.org/fx"
+	"starliner.app/runner/internal/domain/port"
+)
 
 var Module = fx.Module(
 	"application",
@@ -8,5 +11,9 @@ var Module = fx.Module(
 		NewInstallApplication,
 		NewVMApplication,
 		NewBuildApplication,
+		fx.Annotate(
+			func(a *VMApplication) port.VM { return a },
+			fx.As(new(port.VM)),
+		),
 	),
 )

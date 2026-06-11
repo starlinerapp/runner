@@ -1,8 +1,16 @@
 package buildkit
 
-import "go.uber.org/fx"
+import (
+	"go.uber.org/fx"
+	"starliner.app/runner/internal/domain/port"
+)
 
 var Module = fx.Module(
 	"buildkit",
-	fx.Provide(NewClient),
+	fx.Provide(
+		fx.Annotate(
+			NewClient,
+			fx.As(new(port.Buildkit)),
+		),
+	),
 )

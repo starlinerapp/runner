@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"go.uber.org/fx"
 	"starliner.app/runner/internal/application"
 	"starliner.app/runner/internal/infrastructure/buildkit"
@@ -12,7 +15,7 @@ import (
 )
 
 func main() {
-	fx.New(
+	app := fx.New(
 		fx.NopLogger,
 		registry.Module,
 		buildkit.Module,
@@ -21,5 +24,12 @@ func main() {
 		firecracker.Module,
 		application.Module,
 		cli.Module,
-	).Run()
+	)
+	if err := app.Err(); err != nil {
+		if _, err := fmt.Fprintln(os.Stderr, err); err != nil {
+			return
+		}
+		os.Exit(1)
+	}
+	app.Run()
 }
