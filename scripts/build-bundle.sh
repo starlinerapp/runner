@@ -33,8 +33,12 @@ mkdir -p build
 )
 
 echo "==> Packaging release bundle"
-rm -rf "$bundle_dir"
-mkdir -p "$bundle_dir"
+if [[ "$CLI_ONLY" == "true" ]]; then
+	mkdir -p "$bundle_dir"
+else
+	rm -rf "$bundle_dir"
+	mkdir -p "$bundle_dir"
+fi
 
 cp build/runner "$bundle_dir/runner"
 chmod +x "$bundle_dir/runner"
