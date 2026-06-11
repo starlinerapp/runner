@@ -4,17 +4,26 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+CLI_ONLY=false
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+		--cli-only)
+			CLI_ONLY=true
+			shift
+			;;
+		*)
+			echo "Unknown argument: $1" >&2
+			exit 1
+			;;
+	esac
+done
+
 export NIX_CONFIG="extra-experimental-features = nix-command flakes ${NIX_CONFIG:-}"
 
 RELEASE_TAG="${RELEASE_TAG:-dev}"
 bundle="runner-${RELEASE_TAG}-linux-amd64"
 bundle_dir="dist/${bundle}"
-
-echo "==> Building Firecracker assets"
-nix build .#buildkit-runner-rootfs --out-link result-rootfs
-nix build .#buildkit-runner-vmlinux --out-link result-kernel
-nix build .#buildkit-runner-initrd --out-link result-initrd
-nix build .#buildkit-runner-bootargs --out-link result-bootargs
 
 echo "==> Building runner CLI"
 mkdir -p build
@@ -22,6 +31,21 @@ mkdir -p build
 	cd cli
 	go build -o ../build/runner ./cmd/main.go
 )
+
+if [[ "$GO_ONLY" == "true" ]]; then
+	mkdir -p dist
+	cp build/runner "dist/runner"
+	chmod +x "dist/runner"
+	rm -rf build
+	echo "==> Done: dist/runner"
+	exit 0
+fi
+
+echo "==> Building Firecracker assets"
+nix build .#buildkit-runner-rootfs --out-link result-rootfs
+nix build .#buildkit-runner-vmlinux --out-link result-kernel
+nix build .#buildkit-runner-initrd --out-link result-initrd
+nix build .#buildkit-runner-bootargs --out-link result-bootargs
 
 echo "==> Packaging release bundle"
 rm -rf "$bundle_dir"
