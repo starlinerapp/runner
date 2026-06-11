@@ -19,6 +19,7 @@ func NewBuildHandler(
 
 type BuildOpts struct {
 	Repository       string
+	BranchName       string
 	Dockerfile       string
 	Context          string
 	Registry         string
@@ -38,6 +39,7 @@ func (bh *BuildHandler) NewBuildCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return bh.buildApplication.BuildDockerImage(
 				opts.Repository,
+				opts.BranchName,
 				opts.GithubToken,
 				opts.Dockerfile,
 				opts.Context,
@@ -49,6 +51,7 @@ func (bh *BuildHandler) NewBuildCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&opts.Repository, "repository", "", "Git repository URL")
+	cmd.Flags().StringVar(&opts.BranchName, "branch-name", "", "Branch name")
 	cmd.Flags().StringVar(&opts.GithubToken, "github-token", "", "GitHub access token")
 	cmd.Flags().StringVar(&opts.Dockerfile, "dockerfile", "Dockerfile", "Path to Dockerfile relative to context or repository root")
 	cmd.Flags().StringVar(&opts.Context, "context", ".", "Build context directory relative to repository root")

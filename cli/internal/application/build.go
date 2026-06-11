@@ -23,6 +23,7 @@ func NewBuildApplication(
 
 func (ba *BuildApplication) BuildDockerImage(
 	repository string,
+	branchName string,
 	githubToken string,
 	dockerfile string,
 	buildContext string,
@@ -30,7 +31,7 @@ func (ba *BuildApplication) BuildDockerImage(
 	registryUsername string,
 	registryPassword string,
 ) error {
-	workspace, err := ba.git.Checkout(repository, "main", githubToken)
+	workspace, err := ba.git.Checkout(repository, branchName, githubToken)
 	if err != nil {
 		return err
 	}
