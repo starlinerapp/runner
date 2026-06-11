@@ -34,6 +34,7 @@ func (bh *BuildHandler) NewBuildCmd() *cobra.Command {
 		Use:   "build",
 		Short: "Build a Docker image",
 		Long:  "Build a Docker image from a Git repository",
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return bh.buildApplication.BuildDockerImage(
 				opts.Repository,
