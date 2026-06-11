@@ -1,8 +1,6 @@
 package application
 
 import (
-	"fmt"
-
 	"starliner.app/runner/internal/domain/port"
 )
 
@@ -39,7 +37,7 @@ func (ba *BuildApplication) BuildDockerImage(
 		_ = workspace.Close()
 	}()
 
-	logs, err := ba.buildkit.BuildAndPublish(
+	_, err = ba.buildkit.BuildAndPublish(
 		buildContext,
 		dockerfile,
 		registryUrl,
@@ -48,7 +46,6 @@ func (ba *BuildApplication) BuildDockerImage(
 		workspace.CommitSHA(),
 		nil,
 	)
-	fmt.Printf("%s", logs)
 
-	return nil
+	return err
 }

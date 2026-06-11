@@ -8,14 +8,15 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/cli/cli/config/types"
 	"github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/session/auth/authprovider"
+	"github.com/moby/buildkit/util/progress/progressui"
 	"github.com/tonistiigi/fsutil"
+	"golang.org/x/sync/errgroup"
 	"starliner.app/runner/internal/domain/port"
 )
 
@@ -123,51 +124,52 @@ func (c *Client) BuildAndPublish(
 	}
 
 	statusCh := make(chan *client.SolveStatus)
-	doneCh := make(chan struct{})
-
-	var (
-		logs strings.Builder
-		mu   sync.Mutex
-	)
-
-	_, buildErr := bkClient.Solve(
-		ctx,
-		nil,
-		client.SolveOpt{
-			Frontend:      "dockerfile.v0",
-			FrontendAttrs: frontendAttrs,
-			Exports: []client.ExportEntry{
-				{
-					Type: client.ExporterImage,
-					Attrs: map[string]string{
-						"name":              imageTag,
-						"push":              "true",
-						"oci-mediatypes":    "false",
-						"compression":       "gzip",
-						"force-compression": "true",
-					},
+	solveOpt := client.SolveOpt{
+		Frontend:      "dockerfile.v0",
+		FrontendAttrs: frontendAttrs,
+		Exports: []client.ExportEntry{
+			{
+				Type: client.ExporterImage,
+				Attrs: map[string]string{
+					"name":              imageTag,
+					"push":              "true",
+					"oci-mediatypes":    "false",
+					"compression":       "gzip",
+					"force-compression": "true",
 				},
 			},
-			LocalMounts: map[string]fsutil.FS{
-				"context":    contextFS,
-				"dockerfile": contextFS,
-			},
-			Session: attachable,
 		},
-		statusCh,
-	)
-
-	<-doneCh
-
-	mu.Lock()
-	logOutput := logs.String()
-	mu.Unlock()
-
-	if buildErr != nil {
-		if errors.Is(buildErr, context.Canceled) {
-			return logOutput, buildErr
-		}
-		return logOutput, fmt.Errorf("build and push failed: %w", buildErr)
+		LocalMounts: map[string]fsutil.FS{
+			"context":    contextFS,
+			"dockerfile": contextFS,
+		},
+		Session: attachable,
 	}
-	return logOutput, nil
+
+	eg, egCtx := errgroup.WithContext(ctx)
+
+	eg.Go(func() error {
+		_, err := bkClient.Solve(egCtx, nil, solveOpt, statusCh)
+		if err == nil {
+			return nil
+		}
+		if errors.Is(err, context.Canceled) {
+			return err
+		}
+		return fmt.Errorf("build and push failed: %w", err)
+	})
+
+	eg.Go(func() error {
+		d, err := progressui.NewDisplay(os.Stderr, progressui.TtyMode)
+		if err != nil {
+			d, _ = progressui.NewDisplay(os.Stdout, progressui.PlainMode)
+		}
+		_, err = d.UpdateFrom(context.TODO(), statusCh)
+		return err
+	})
+
+	if err := eg.Wait(); err != nil {
+		return "", err
+	}
+	return "", nil
 }
