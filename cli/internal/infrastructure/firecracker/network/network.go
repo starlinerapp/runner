@@ -47,7 +47,7 @@ func Setup(tap string, subnetOctet int, mac string) (*Host, error) {
 		return nil, fmt.Errorf("bring up %s: %w", tap, err)
 	}
 
-	if err := privileged.Run("sysctl", "-w", "net.ipv4.ip_forward=1"); err != nil {
+	if err := privileged.RunQuiet("sysctl", "-w", "net.ipv4.ip_forward=1"); err != nil {
 		setup.Teardown()
 		return nil, fmt.Errorf("enable ip forwarding: %w", err)
 	}
