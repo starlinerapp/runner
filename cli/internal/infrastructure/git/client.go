@@ -1,6 +1,7 @@
 package git
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/go-git/go-git/v5"
@@ -22,11 +23,14 @@ func (c *Client) Checkout(repoUrl string, branchName string, accessToken string)
 		return nil, err
 	}
 
+	fmt.Printf("Cloning %s (branch %s)...\n", repoUrl, branchName)
 	commitSHA, err := clone(path, repoUrl, branchName, accessToken)
 	if err != nil {
 		_ = os.RemoveAll(path)
 		return nil, err
 	}
+	fmt.Printf("Cloned at %s\n", commitSHA)
+
 	return NewWorkspace(path, commitSHA), nil
 }
 
