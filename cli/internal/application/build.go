@@ -1,6 +1,8 @@
 package application
 
 import (
+	"path/filepath"
+
 	"starliner.app/runner/internal/domain/port"
 )
 
@@ -38,7 +40,7 @@ func (ba *BuildApplication) BuildDockerImage(
 	}()
 
 	_, err = ba.buildkit.BuildAndPublish(
-		buildContext,
+		filepath.Join(workspace.Path(), buildContext),
 		dockerfile,
 		registryUrl,
 		registryUsername,
