@@ -7,5 +7,6 @@ var Module = fx.Module(
 	fx.Provide(
 		NewInstallApplication,
 		NewVMApplication,
+		NewBuildApplication,
 	),
 )
