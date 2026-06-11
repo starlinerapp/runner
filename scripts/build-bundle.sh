@@ -32,7 +32,7 @@ mkdir -p build
 	go build -o ../build/runner ./cmd/main.go
 )
 
-if [[ "$GO_ONLY" == "true" ]]; then
+if [[ "$CLI_ONLY" == "true" ]]; then
 	mkdir -p dist
 	cp build/runner "dist/runner"
 	chmod +x "dist/runner"
