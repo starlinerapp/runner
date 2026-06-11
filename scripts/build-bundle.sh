@@ -32,21 +32,6 @@ mkdir -p build
 	go build -o ../build/runner ./cmd/main.go
 )
 
-if [[ "$CLI_ONLY" == "true" ]]; then
-	mkdir -p dist
-	cp build/runner "dist/runner"
-	chmod +x "dist/runner"
-	rm -rf build
-	echo "==> Done: dist/runner"
-	exit 0
-fi
-
-echo "==> Building Firecracker assets"
-nix build .#buildkit-runner-rootfs --out-link result-rootfs
-nix build .#buildkit-runner-vmlinux --out-link result-kernel
-nix build .#buildkit-runner-initrd --out-link result-initrd
-nix build .#buildkit-runner-bootargs --out-link result-bootargs
-
 echo "==> Packaging release bundle"
 rm -rf "$bundle_dir"
 mkdir -p "$bundle_dir"
@@ -54,10 +39,18 @@ mkdir -p "$bundle_dir"
 cp build/runner "$bundle_dir/runner"
 chmod +x "$bundle_dir/runner"
 
-cp -L result-kernel/vmlinux "$bundle_dir/vmlinux"
-cp -L result-initrd/initrd "$bundle_dir/initrd"
-cp -L result-bootargs/boot.args "$bundle_dir/boot.args"
-zstd -T0 -19 -f -o "$bundle_dir/rootfs.ext4.zst" result-rootfs/rootfs.img
+if [[ "$CLI_ONLY" != "true" ]]; then
+	echo "==> Building Firecracker assets"
+	nix build .#buildkit-runner-rootfs --out-link result-rootfs
+	nix build .#buildkit-runner-vmlinux --out-link result-kernel
+	nix build .#buildkit-runner-initrd --out-link result-initrd
+	nix build .#buildkit-runner-bootargs --out-link result-bootargs
+
+	cp -L result-kernel/vmlinux "$bundle_dir/vmlinux"
+	cp -L result-initrd/initrd "$bundle_dir/initrd"
+	cp -L result-bootargs/boot.args "$bundle_dir/boot.args"
+	zstd -T0 -19 -f -o "$bundle_dir/rootfs.ext4.zst" result-rootfs/rootfs.img
+fi
 
 rm -f "dist/${bundle}.tar"
 tar -C dist -cf "dist/${bundle}.tar" "$bundle"
