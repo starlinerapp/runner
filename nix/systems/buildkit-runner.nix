@@ -29,6 +29,8 @@
     "panic=1"
     "pci=off"
     "root=/dev/vda"
+    "net.ifnames=0"
+    "biosdevname=0"
   ];
 
   services.openssh.enable = true;
