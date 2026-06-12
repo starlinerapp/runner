@@ -15,6 +15,7 @@
   boot.initrd.kernelModules = [
     "virtio_mmio"
     "virtio_blk"
+    "virtio_net"
   ];
 
   fileSystems."/" = {
