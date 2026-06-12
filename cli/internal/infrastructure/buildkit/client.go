@@ -49,7 +49,12 @@ func (c *Client) BuildAndPublish(
 		_ = c.vm.DeleteVM(vm.ID)
 	}()
 
-	addr := fmt.Sprintf("tcp://%s:1234", vm.GuestIP)
+	fmt.Printf("Waiting for buildkit at %s:%d...\n", vm.GuestIP, Port)
+	if err := Wait(vm.GuestIP, ConnectTimeout); err != nil {
+		return "", err
+	}
+
+	addr := fmt.Sprintf("tcp://%s:%d", vm.GuestIP, Port)
 	bkClient, err := client.New(ctx, addr)
 
 	if err != nil {

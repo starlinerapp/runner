@@ -86,7 +86,7 @@ func Setup(tap string, subnetOctet int, mac string) (*Host, error) {
 		return nil, fmt.Errorf("configure return traffic rule: %w", err)
 	}
 
-	dnsmasq, err := startDHCP(tap, dhcpRange, gateway, mac, GuestIP(subnetOctet))
+	dnsmasq, err := startDHCP(tap, dhcpRange, gateway, mac, fmt.Sprintf("172.16.%d.2", subnetOctet))
 	if err != nil {
 		setup.Teardown()
 		return nil, err

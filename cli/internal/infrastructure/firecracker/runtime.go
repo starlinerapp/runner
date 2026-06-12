@@ -1,8 +1,8 @@
 package firecracker
 
 import (
+	"fmt"
 	"os"
-	"time"
 
 	"starliner.app/runner/internal/domain/port"
 	"starliner.app/runner/internal/domain/value"
@@ -45,20 +45,9 @@ func (r *Runtime) Provision(res value.VMResources) (*port.ProvisionResult, error
 		return nil, err
 	}
 
-	guestIP, err := network.WaitGuestIP(res.Tap, res.MAC, 90*time.Second)
-	if err != nil {
-		vm.Teardown(value.VM{
-			Dir:            dir,
-			Tap:            res.Tap,
-			FirecrackerPID: vmCmd.Process.Pid,
-			DNSMasqPID:     net.DNSMasqPID(),
-		})
-		return nil, err
-	}
-
 	return &port.ProvisionResult{
 		Dir:            dir,
-		GuestIP:        guestIP,
+		GuestIP:        fmt.Sprintf("172.16.%d.2", res.SubnetOctet),
 		FirecrackerPID: vmCmd.Process.Pid,
 		DNSMasqPID:     net.DNSMasqPID(),
 	}, nil
