@@ -132,6 +132,8 @@ func (c *Client) BuildAndPublish(
 		}),
 	}
 
+	cacheRef := registryCacheRef(imageRef)
+
 	statusCh := make(chan *client.SolveStatus)
 	solveOpt := client.SolveOpt{
 		Frontend:      "dockerfile.v0",
@@ -145,6 +147,23 @@ func (c *Client) BuildAndPublish(
 					"oci-mediatypes":    "false",
 					"compression":       "gzip",
 					"force-compression": "true",
+				},
+			},
+		},
+		CacheExports: []client.CacheOptionsEntry{
+			{
+				Type: "registry",
+				Attrs: map[string]string{
+					"ref":  cacheRef,
+					"mode": "max",
+				},
+			},
+		},
+		CacheImports: []client.CacheOptionsEntry{
+			{
+				Type: "registry",
+				Attrs: map[string]string{
+					"ref": cacheRef,
 				},
 			},
 		},
@@ -181,4 +200,14 @@ func (c *Client) BuildAndPublish(
 		return "", err
 	}
 	return "", nil
+}
+
+const registryBuildCacheTag = "buildcache"
+
+func registryCacheRef(imageRef value.ImageRef) string {
+	name := imageRef.String()
+	if i := strings.LastIndex(name, ":"); i != -1 && strings.LastIndex(name, "/") < i {
+		return name[:i] + ":" + registryBuildCacheTag
+	}
+	return name + ":" + registryBuildCacheTag
 }
