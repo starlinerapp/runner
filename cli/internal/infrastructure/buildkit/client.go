@@ -18,6 +18,7 @@ import (
 	"github.com/tonistiigi/fsutil"
 	"golang.org/x/sync/errgroup"
 	"starliner.app/runner/internal/domain/port"
+	"starliner.app/runner/internal/domain/value"
 )
 
 type Client struct {
@@ -33,10 +34,9 @@ func NewClient(vm port.VM) *Client {
 func (c *Client) BuildAndPublish(
 	projectDir string,
 	dockerfilePath string,
-	registryUrl string,
 	registryUsername string,
 	registryPassword string,
-	imageTag string,
+	imageRef value.ImageRef,
 	args []*port.Arg,
 ) (string, error) {
 	ctx := context.Background()
@@ -113,13 +113,16 @@ func (c *Client) BuildAndPublish(
 		frontendAttrs["build-arg:"+a.Name] = a.Value
 	}
 
+	authConfigs := map[string]types.AuthConfig{}
+	if host := imageRef.RegistryHost(); host != "" {
+		authConfigs[host] = types.AuthConfig{
+			Username: registryUsername,
+			Password: registryPassword,
+		}
+	}
+
 	dockerConfig := &configfile.ConfigFile{
-		AuthConfigs: map[string]types.AuthConfig{
-			registryUrl: {
-				Username: registryUsername,
-				Password: registryPassword,
-			},
-		},
+		AuthConfigs: authConfigs,
 	}
 
 	attachable := []session.Attachable{
@@ -136,7 +139,7 @@ func (c *Client) BuildAndPublish(
 			{
 				Type: client.ExporterImage,
 				Attrs: map[string]string{
-					"name":              imageTag,
+					"name":              imageRef.String(),
 					"push":              "true",
 					"oci-mediatypes":    "false",
 					"compression":       "gzip",

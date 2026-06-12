@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 
 	"starliner.app/runner/internal/domain/port"
+	"starliner.app/runner/internal/domain/value"
 )
 
 type BuildApplication struct {
@@ -27,9 +28,9 @@ func (ba *BuildApplication) BuildDockerImage(
 	githubToken string,
 	dockerfile string,
 	buildContext string,
-	registryUrl string,
 	registryUsername string,
 	registryPassword string,
+	image string,
 ) error {
 	workspace, err := ba.git.Checkout(repository, branchName, githubToken)
 	if err != nil {
@@ -39,13 +40,18 @@ func (ba *BuildApplication) BuildDockerImage(
 		_ = workspace.Close()
 	}()
 
+	imageRef, err := value.ParseImageRef(image)
+	if err != nil {
+		return err
+	}
+	imageRef = imageRef.WithTag(workspace.CommitSHA())
+
 	_, err = ba.buildkit.BuildAndPublish(
 		filepath.Join(workspace.Path(), buildContext),
 		dockerfile,
-		registryUrl,
 		registryUsername,
 		registryPassword,
-		workspace.CommitSHA(),
+		imageRef,
 		nil,
 	)
 
