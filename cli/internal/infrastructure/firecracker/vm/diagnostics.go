@@ -11,7 +11,7 @@ import (
 
 func PrintDiagnostics(vmDir, guestIP string) {
 	fmt.Fprintf(os.Stderr, "\n--- VM diagnostics (%s) ---\n", vmDir)
-	for _, name := range []string{config.SerialLogName, config.LogFileName, config.FileName} {
+	for _, name := range []string{config.LogFileName, config.SerialLogName, config.FileName} {
 		tailFile(filepath.Join(vmDir, name))
 	}
 	fmt.Fprintf(os.Stderr, "Check from host: ping %s && nc -zv %s 1234\n", guestIP, guestIP)

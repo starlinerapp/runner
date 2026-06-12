@@ -34,6 +34,7 @@
   ];
 
   services.openssh.enable = true;
+  services.getty.ttyS0.enable = false;
 
   users.users.root = {
     initialPassword = "root";

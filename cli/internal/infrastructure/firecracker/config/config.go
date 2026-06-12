@@ -15,7 +15,7 @@ const (
 	LogFileName   = "firecracker.log"
 	SerialLogName = "serial.log"
 	defaultVCPUs  = 2
-	defaultMemMiB = 2048
+	defaultMemMiB = 4096
 )
 
 type vmConfig struct {

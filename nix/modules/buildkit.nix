@@ -33,8 +33,7 @@
     description = "BuildKit Daemon";
 
     wantedBy = [ "multi-user.target" ];
-
-    after = [ "network-pre.target" ];
+    after = [ "runner-guest-net.service" ];
 
     path = with pkgs; [
       buildkit
@@ -61,6 +60,10 @@
       RuntimeDirectory = "buildkit";
 
       Delegate = true;
+      PrivateNetwork = false;
+      PrivateDevices = false;
+      ProtectSystem = "off";
+      ProtectControlGroups = false;
     };
   };
 }
