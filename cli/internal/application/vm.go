@@ -43,6 +43,7 @@ func (a *VMApplication) CreateVM() (*value.VM, error) {
 			Dir:            provisioned.Dir,
 			Tap:            res.Tap,
 			MAC:            res.MAC,
+			GuestIP:        provisioned.GuestIP,
 			SubnetOctet:    res.SubnetOctet,
 			GuestCID:       res.GuestCID,
 			FirecrackerPID: provisioned.FirecrackerPID,
@@ -63,6 +64,10 @@ func (a *VMApplication) CreateVM() (*value.VM, error) {
 
 func (a *VMApplication) ListVMs() ([]value.VM, error) {
 	return a.registry.List()
+}
+
+func (a *VMApplication) Diagnose(vm value.VM) {
+	a.runtime.Diagnose(vm)
 }
 
 func (a *VMApplication) DeleteVM(id string) error {

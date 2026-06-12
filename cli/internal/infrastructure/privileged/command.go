@@ -1,6 +1,7 @@
 package privileged
 
 import (
+	"io"
 	"os"
 	"os/exec"
 )
@@ -9,6 +10,13 @@ func Run(name string, args ...string) error {
 	cmd := Command(name, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+func RunQuiet(name string, args ...string) error {
+	cmd := Command(name, args...)
+	cmd.Stdout = io.Discard
+	cmd.Stderr = io.Discard
 	return cmd.Run()
 }
 

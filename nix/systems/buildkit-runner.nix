@@ -15,6 +15,7 @@
   boot.initrd.kernelModules = [
     "virtio_mmio"
     "virtio_blk"
+    "virtio_net"
   ];
 
   fileSystems."/" = {
@@ -28,9 +29,13 @@
     "panic=1"
     "pci=off"
     "root=/dev/vda"
+    "net.ifnames=0"
+    "biosdevname=0"
   ];
 
   services.openssh.enable = true;
+
+  systemd.services."serial-getty@ttyS0".enable = false;
 
   users.users.root = {
     initialPassword = "root";

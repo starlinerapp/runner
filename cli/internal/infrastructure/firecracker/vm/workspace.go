@@ -122,6 +122,7 @@ func PrepareWorkspace(assetsDir string, res value.VMResources) (string, error) {
 		_ = os.RemoveAll(dir)
 		return "", err
 	}
+	bootArgs = config.AppendGuestNetwork(bootArgs, res.SubnetOctet)
 	if err := config.Write(configPath, res.Tap, res.MAC, bootArgs); err != nil {
 		_ = os.RemoveAll(dir)
 		return "", err

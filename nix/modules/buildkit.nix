@@ -3,6 +3,7 @@
 {
   boot.kernelModules = [
     "overlay"
+    "virtio_mmio"
     "virtio_net"
   ];
 
@@ -32,8 +33,7 @@
     description = "BuildKit Daemon";
 
     wantedBy = [ "multi-user.target" ];
-
-    after = [ "network.target" ];
+    after = [ "runner-guest-net.service" ];
 
     path = with pkgs; [
       buildkit
@@ -60,6 +60,10 @@
       RuntimeDirectory = "buildkit";
 
       Delegate = true;
+      PrivateNetwork = false;
+      PrivateDevices = false;
+      ProtectSystem = "off";
+      ProtectControlGroups = false;
     };
   };
 }

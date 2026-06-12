@@ -13,8 +13,9 @@ const (
 	FileName      = "firecracker.json"
 	SocketName    = "firecracker.socket"
 	LogFileName   = "firecracker.log"
+	SerialLogName = "serial.log"
 	defaultVCPUs  = 2
-	defaultMemMiB = 2048
+	defaultMemMiB = 4096
 )
 
 type vmConfig struct {
@@ -22,7 +23,8 @@ type vmConfig struct {
 		Path       string `json:"path"`
 		UpdatePath bool   `json:"update_path"`
 	} `json:"api-socket"`
-	BootSource struct {
+	SerialConsole *serialConsoleConfig `json:"serial-console,omitempty"`
+	BootSource    struct {
 		KernelImagePath string `json:"kernel_image_path"`
 		InitrdPath      string `json:"initrd_path"`
 		BootArgs        string `json:"boot_args"`
@@ -48,6 +50,11 @@ type networkInterfaceConfig struct {
 	HostDevName string `json:"host_dev_name"`
 }
 
+type serialConsoleConfig struct {
+	Mode     string `json:"mode"`
+	Filename string `json:"filename"`
+}
+
 func LogPath(vmDir string) string {
 	return filepath.Join(vmDir, LogFileName)
 }
@@ -61,6 +68,10 @@ func Write(destPath, tap, mac, bootArgs string) error {
 	cfg := vmConfig{}
 	cfg.APISocket.Path = SocketPath(vmDir)
 	cfg.APISocket.UpdatePath = false
+	cfg.SerialConsole = &serialConsoleConfig{
+		Mode:     "Pipe",
+		Filename: "./" + SerialLogName,
+	}
 	cfg.BootSource.KernelImagePath = "./" + assets.KernelImage
 	cfg.BootSource.InitrdPath = "./" + assets.InitrdImage
 	cfg.BootSource.BootArgs = bootArgs
