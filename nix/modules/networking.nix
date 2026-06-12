@@ -1,6 +1,8 @@
 { pkgs, ... }:
 
 let
+  ip = "${pkgs.iproute2}/bin/ip";
+
   configureGuestNet = pkgs.writeShellScript "runner-configure-guest-net" ''
     set -euo pipefail
 
@@ -21,30 +23,36 @@ let
     fi
 
     for _ in $(seq 1 100); do
-      if ${pkgs.iproute2}/bin/ip link show eth0 >/dev/null 2>&1; then
+      if ${ip} link show eth0 >/dev/null 2>&1; then
         break
       fi
       sleep 0.1
     done
 
-    ${pkgs.iproute2}/bin/ip link set dev eth0 up
-    ${pkgs.iproute2}/bin/ip addr flush dev eth0
-    ${pkgs.iproute2}/bin/ip addr add "$runner_ipv4" dev eth0
-    ${pkgs.iproute2}/bin/ip route replace default via "$runner_gw" dev eth0
+    ${ip} link set dev eth0 up
+    ${ip} addr flush dev eth0
+    ${ip} addr add "$runner_ipv4" dev eth0
+    ${ip} route replace default via "$runner_gw" dev eth0
+
+    # Static IP does not use host dnsmasq; set DNS
+    printf 'nameserver 8.8.8.8\nnameserver 1.1.1.1\n' >/etc/resolv.conf
   '';
 in
 {
   networking.useDHCP = false;
   networking.useNetworkd = false;
   networking.firewall.enable = false;
+  networking.nameservers = [ "8.8.8.8" "1.1.1.1" ];
 
   systemd.network.wait-online.enable = false;
 
   systemd.services.runner-guest-net = {
     description = "Configure static guest IP from kernel cmdline";
+
     wantedBy = [ "multi-user.target" ];
     before = [ "buildkitd.service" ];
     after = [ "systemd-udev-settle.service" ];
+
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
