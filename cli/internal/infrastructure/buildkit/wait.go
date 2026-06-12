@@ -9,7 +9,7 @@ import (
 
 const (
 	Port           = 1234
-	ConnectTimeout = 3 * time.Minute
+	ConnectTimeout = 5 * time.Minute
 )
 
 func Wait(host string, timeout time.Duration) error {

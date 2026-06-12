@@ -57,3 +57,7 @@ func (r *Runtime) Teardown(record value.VM) error {
 	vm.Teardown(record)
 	return nil
 }
+
+func (r *Runtime) Diagnose(record value.VM) {
+	vm.PrintDiagnostics(record.Dir, record.GuestIP)
+}

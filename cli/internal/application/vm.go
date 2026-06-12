@@ -66,6 +66,10 @@ func (a *VMApplication) ListVMs() ([]value.VM, error) {
 	return a.registry.List()
 }
 
+func (a *VMApplication) Diagnose(vm value.VM) {
+	a.runtime.Diagnose(vm)
+}
+
 func (a *VMApplication) DeleteVM(id string) error {
 	record, err := a.registry.Get(id)
 	if err != nil {

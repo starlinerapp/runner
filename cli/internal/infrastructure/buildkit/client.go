@@ -41,20 +41,21 @@ func (c *Client) BuildAndPublish(
 ) (string, error) {
 	ctx := context.Background()
 
-	vm, err := c.vm.CreateVM()
+	guest, err := c.vm.CreateVM()
 	if err != nil {
 		return "", fmt.Errorf("failed to create VM: %w", err)
 	}
 	defer func() {
-		_ = c.vm.DeleteVM(vm.ID)
+		_ = c.vm.DeleteVM(guest.ID)
 	}()
 
-	fmt.Printf("Waiting for buildkit at %s:%d...\n", vm.GuestIP, Port)
-	if err := Wait(vm.GuestIP, ConnectTimeout); err != nil {
+	fmt.Printf("Waiting for buildkit at %s:%d...\n", guest.GuestIP, Port)
+	if err := Wait(guest.GuestIP, ConnectTimeout); err != nil {
+		c.vm.Diagnose(*guest)
 		return "", err
 	}
 
-	addr := fmt.Sprintf("tcp://%s:%d", vm.GuestIP, Port)
+	addr := fmt.Sprintf("tcp://%s:%d", guest.GuestIP, Port)
 	bkClient, err := client.New(ctx, addr)
 
 	if err != nil {

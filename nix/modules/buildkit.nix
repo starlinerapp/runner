@@ -34,11 +34,7 @@
 
     wantedBy = [ "multi-user.target" ];
 
-    after = [
-      "network.target"
-      "sys-subsystem-net-devices-eth0.device"
-    ];
-    wants = [ "sys-subsystem-net-devices-eth0.device" ];
+    after = [ "network-pre.target" ];
 
     path = with pkgs; [
       buildkit
