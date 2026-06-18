@@ -9,21 +9,24 @@ import (
 	"time"
 
 	"starliner.app/runner/internal/conf"
+	"starliner.app/runner/internal/domain/port"
 )
 
 type Client struct {
-	conf *conf.Config
-	http *http.Client
+	conf        *conf.Config
+	credentials port.CredentialsStore
+	http        *http.Client
 }
 
-func NewClient(conf *conf.Config) *Client {
+func NewClient(conf *conf.Config, credentials port.CredentialsStore) *Client {
 	httpClient := &http.Client{
 		Timeout: 5 * time.Second,
 	}
 
 	return &Client{
-		conf: conf,
-		http: httpClient,
+		conf:        conf,
+		credentials: credentials,
+		http:        httpClient,
 	}
 }
 
@@ -62,5 +65,16 @@ func (c *Client) RegisterRunner(token string) error {
 		return fmt.Errorf("register runner failed, status code: %d", resp.StatusCode)
 	}
 
+	return nil
+}
+
+func (c *Client) setAuth(req *http.Request) error {
+	token, err := c.credentials.Token()
+	if err != nil {
+		return err
+	}
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
 	return nil
 }

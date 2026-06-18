@@ -9,6 +9,7 @@ import (
 	"starliner.app/runner/internal/conf"
 	"starliner.app/runner/internal/infrastructure/buildkit"
 	"starliner.app/runner/internal/infrastructure/bundle"
+	"starliner.app/runner/internal/infrastructure/credentials"
 	"starliner.app/runner/internal/infrastructure/firecracker"
 	"starliner.app/runner/internal/infrastructure/git"
 	"starliner.app/runner/internal/infrastructure/registry"
@@ -20,6 +21,7 @@ func main() {
 	app := fx.New(
 		fx.NopLogger,
 		registry.Module,
+		credentials.Module,
 		buildkit.Module,
 		starliner.Module,
 		git.Module,
