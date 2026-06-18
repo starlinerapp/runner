@@ -5,6 +5,7 @@ import "go.uber.org/fx"
 var Module = fx.Module(
 	"handler",
 	fx.Provide(
+		NewRegisterHandler,
 		NewInstallHandler,
 		NewVMHandler,
 		NewBuildHandler,

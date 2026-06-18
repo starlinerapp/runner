@@ -11,6 +11,7 @@ import (
 func Register(
 	lc fx.Lifecycle,
 	sd fx.Shutdowner,
+	register *handler.RegisterHandler,
 	build *handler.BuildHandler,
 	install *handler.InstallHandler,
 	vm *handler.VMHandler,
@@ -27,6 +28,7 @@ func Register(
 	}
 
 	rootCmd.AddCommand(
+		register.NewRegisterCmd(),
 		build.NewBuildCmd(),
 		install.NewInstallCmd(),
 		vm.NewVMCmd(),
