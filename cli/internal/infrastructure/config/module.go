@@ -1,4 +1,4 @@
-package credentials
+package config
 
 import (
 	"go.uber.org/fx"
@@ -6,11 +6,11 @@ import (
 )
 
 var Module = fx.Module(
-	"credentials",
+	"config",
 	fx.Provide(
 		fx.Annotate(
 			New,
-			fx.As(new(port.CredentialsStore)),
+			fx.As(new(port.ConfigStore)),
 		),
 	),
 )

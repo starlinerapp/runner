@@ -15,13 +15,15 @@ import (
 
 const BinaryPath = assets.InstalledBinaryDir + "/runner"
 
-type Client struct{}
-
-func NewClient() port.Installer {
-	return &Client{}
+type Client struct {
+	config port.ConfigStore
 }
 
-func (c *Client) Install() error {
+func NewClient(config port.ConfigStore) port.Installer {
+	return &Client{config: config}
+}
+
+func (c *Client) Install(baseURL string) error {
 	sourceDir, err := sourceDir()
 	if err != nil {
 		return err
@@ -64,9 +66,14 @@ func (c *Client) Install() error {
 		return err
 	}
 
+	if err := c.config.SaveBaseURL(baseURL); err != nil {
+		return fmt.Errorf("save config: %w", err)
+	}
+
 	fmt.Println("Runner installed successfully")
 	fmt.Printf("  binary: %s\n", BinaryPath)
 	fmt.Printf("  assets: %s\n", assets.InstalledAssetsDir)
+	fmt.Printf("  base URL: %s\n", baseURL)
 	return nil
 }
 

@@ -6,25 +6,25 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
-	"starliner.app/runner/internal/conf"
 	"starliner.app/runner/internal/domain/port"
 )
 
 type Client struct {
-	conf        *conf.Config
+	config      port.ConfigStore
 	credentials port.CredentialsStore
 	http        *http.Client
 }
 
-func NewClient(conf *conf.Config, credentials port.CredentialsStore) *Client {
+func NewClient(config port.ConfigStore, credentials port.CredentialsStore) *Client {
 	httpClient := &http.Client{
 		Timeout: 5 * time.Second,
 	}
 
 	return &Client{
-		conf:        conf,
+		config:      config,
 		credentials: credentials,
 		http:        httpClient,
 	}
@@ -35,6 +35,11 @@ type RegisterRunnerRequest struct {
 }
 
 func (c *Client) RegisterRunner(token string) error {
+	baseURL, err := c.config.BaseURL()
+	if err != nil {
+		return err
+	}
+
 	var body bytes.Buffer
 
 	if err := json.NewEncoder(&body).Encode(&RegisterRunnerRequest{Token: token}); err != nil {
@@ -43,7 +48,7 @@ func (c *Client) RegisterRunner(token string) error {
 
 	req, err := http.NewRequest(
 		http.MethodPost,
-		c.conf.ServerBaseUrl+"/runners/register",
+		strings.TrimRight(baseURL, "/")+"/runners/register",
 		&body,
 	)
 	if err != nil {

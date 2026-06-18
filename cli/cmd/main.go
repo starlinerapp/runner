@@ -6,9 +6,9 @@ import (
 
 	"go.uber.org/fx"
 	"starliner.app/runner/internal/application"
-	"starliner.app/runner/internal/conf"
 	"starliner.app/runner/internal/infrastructure/buildkit"
 	"starliner.app/runner/internal/infrastructure/bundle"
+	"starliner.app/runner/internal/infrastructure/config"
 	"starliner.app/runner/internal/infrastructure/credentials"
 	"starliner.app/runner/internal/infrastructure/firecracker"
 	"starliner.app/runner/internal/infrastructure/git"
@@ -21,6 +21,7 @@ func main() {
 	app := fx.New(
 		fx.NopLogger,
 		registry.Module,
+		config.Module,
 		credentials.Module,
 		buildkit.Module,
 		starliner.Module,
@@ -29,7 +30,6 @@ func main() {
 		firecracker.Module,
 		application.Module,
 		cli.Module,
-		conf.Module,
 	)
 	if err := app.Err(); err != nil {
 		if _, err := fmt.Fprintln(os.Stderr, err); err != nil {
