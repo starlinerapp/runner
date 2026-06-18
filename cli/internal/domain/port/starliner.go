@@ -1,5 +1,5 @@
 package port
 
 type Starliner interface {
-	RegisterRunner(token string) error
+	RegisterRunner(token string, insecureSkipTLSVerify bool) error
 }

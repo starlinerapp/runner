@@ -17,8 +17,8 @@ func NewRegisterApplication(
 	}
 }
 
-func (a *RegisterApplication) RegisterRunner(token string) error {
-	if err := a.starliner.RegisterRunner(token); err != nil {
+func (a *RegisterApplication) RegisterRunner(token string, insecureSkipTLSVerify bool) error {
+	if err := a.starliner.RegisterRunner(token, insecureSkipTLSVerify); err != nil {
 		return err
 	}
 

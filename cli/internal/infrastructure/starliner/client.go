@@ -2,6 +2,7 @@ package starliner
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -34,7 +35,7 @@ type RegisterRunnerRequest struct {
 	Token string `json:"token"`
 }
 
-func (c *Client) RegisterRunner(token string) error {
+func (c *Client) RegisterRunner(token string, insecureSkipTLSVerify bool) error {
 	baseURL, err := c.config.BaseURL()
 	if err != nil {
 		return err
@@ -58,7 +59,17 @@ func (c *Client) RegisterRunner(token string) error {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := c.http.Do(req)
+	httpClient := c.http
+	if insecureSkipTLSVerify {
+		httpClient = &http.Client{
+			Timeout: c.http.Timeout,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
+		}
+	}
+
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -70,16 +81,5 @@ func (c *Client) RegisterRunner(token string) error {
 		return fmt.Errorf("register runner failed, status code: %d", resp.StatusCode)
 	}
 
-	return nil
-}
-
-func (c *Client) setAuth(req *http.Request) error {
-	token, err := c.credentials.Token()
-	if err != nil {
-		return err
-	}
-	if token != "" {
-		req.Header.Set("Authorization", "Bearer "+token)
-	}
 	return nil
 }

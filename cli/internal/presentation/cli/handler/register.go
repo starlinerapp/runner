@@ -16,7 +16,8 @@ func NewRegisterHandler(registerApplication *application.RegisterApplication) *R
 }
 
 type RegisterOpts struct {
-	Token string
+	Token                 string
+	InsecureSkipTLSVerify bool
 }
 
 func (h *RegisterHandler) NewRegisterCmd() *cobra.Command {
@@ -28,11 +29,12 @@ func (h *RegisterHandler) NewRegisterCmd() *cobra.Command {
 		Long:  "Register runner with Starliner Control Plane.",
 		Args:  cobra.NoArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return h.registerApplication.RegisterRunner(opts.Token)
+			return h.registerApplication.RegisterRunner(opts.Token, opts.InsecureSkipTLSVerify)
 		},
 	}
 
 	cmd.Flags().StringVar(&opts.Token, "token", "", "token")
+	cmd.Flags().BoolVar(&opts.InsecureSkipTLSVerify, "insecure-skip-tls-verify", false, "skip TLS certificate verification")
 
 	_ = cmd.MarkFlagRequired("token")
 
