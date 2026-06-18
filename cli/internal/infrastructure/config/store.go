@@ -77,7 +77,7 @@ func (s *Store) BaseURL() (string, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return "", fmt.Errorf("runner config not found; reinstall with --base-url")
+			return "", fmt.Errorf("runner config not found; reinstall with --baseUrl")
 		}
 		return "", fmt.Errorf("read config: %w", err)
 	}

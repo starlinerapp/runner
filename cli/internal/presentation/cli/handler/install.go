@@ -34,8 +34,8 @@ func (h *InstallHandler) NewInstallCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&opts.BaseURL, "base-url", "", "Starliner control plane base URL")
-	_ = cmd.MarkFlagRequired("base-url")
+	cmd.Flags().StringVar(&opts.BaseURL, "baseUrl", "", "Starliner control plane base URL")
+	_ = cmd.MarkFlagRequired("baseUrl")
 
 	return cmd
 }
