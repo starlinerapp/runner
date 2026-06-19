@@ -49,18 +49,23 @@ func Labels(r io.Reader, w io.Writer, defaultLabels []string) ([]string, error) 
 	return labels, nil
 }
 
-func PositiveInt(r io.Reader, w io.Writer, label string) (int, error) {
+func PositiveInt(r io.Reader, w io.Writer, label string, defaultValue int) (int, error) {
 	scanner := bufio.NewScanner(r)
 	for {
-		fmt.Fprintf(w, "%s: ", label)
+		fmt.Fprintf(w, "%s [%d]: ", label, defaultValue)
 		if !scanner.Scan() {
 			if err := scanner.Err(); err != nil {
 				return 0, err
 			}
-			return 0, fmt.Errorf("max concurrent jobs is required")
+			return defaultValue, nil
 		}
 
-		value, err := strconv.Atoi(strings.TrimSpace(scanner.Text()))
+		text := strings.TrimSpace(scanner.Text())
+		if text == "" {
+			return defaultValue, nil
+		}
+
+		value, err := strconv.Atoi(text)
 		if err != nil || value < 1 {
 			fmt.Fprintln(w, "Enter a positive integer.")
 			continue

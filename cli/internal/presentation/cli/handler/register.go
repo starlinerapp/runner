@@ -8,7 +8,10 @@ import (
 	"starliner.app/runner/internal/presentation/cli/prompt"
 )
 
-var defaultRegisterLabels = []string{"self-hosted"}
+var (
+	defaultRegisterLabels    = []string{"self-hosted"}
+	defaultMaxConcurrentJobs = 1
+)
 
 type RegisterHandler struct {
 	registerApplication *application.RegisterApplication
@@ -49,7 +52,7 @@ func (h *RegisterHandler) NewRegisterCmd() *cobra.Command {
 	cmd.Flags().StringVar(&opts.Token, "token", "", "token")
 	cmd.Flags().StringVar(&opts.Name, "name", "", "runner name")
 	cmd.Flags().StringSliceVar(&opts.Labels, "labels", nil, "runner labels")
-	cmd.Flags().IntVar(&opts.MaxConcurrentJobs, "max-concurrent-jobs", 0, "maximum concurrent jobs")
+	cmd.Flags().IntVar(&opts.MaxConcurrentJobs, "max-concurrent-jobs", defaultMaxConcurrentJobs, "maximum concurrent jobs")
 	cmd.Flags().BoolVar(&opts.InsecureSkipTLSVerify, "insecure-skip-tls-verify", false, "skip TLS certificate verification")
 
 	_ = cmd.MarkFlagRequired("token")
@@ -82,7 +85,7 @@ func (h *RegisterHandler) resolveRegisterInput(cmd *cobra.Command, opts *Registe
 	maxConcurrentJobs := opts.MaxConcurrentJobs
 	if !cmd.Flags().Changed("max-concurrent-jobs") {
 		var err error
-		maxConcurrentJobs, err = prompt.PositiveInt(in, out, "Max concurrent jobs")
+		maxConcurrentJobs, err = prompt.PositiveInt(in, out, "Max concurrent jobs", defaultMaxConcurrentJobs)
 		if err != nil {
 			return application.RegisterRunnerInput{}, err
 		}
