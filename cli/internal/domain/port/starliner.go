@@ -1,5 +1,5 @@
 package port
 
 type Starliner interface {
-	RegisterRunner(token string, insecureSkipTLSVerify bool) error
+	RegisterRunner(token, name string, labels []string, maxConcurrentJobs int, insecureSkipTLSVerify bool) error
 }

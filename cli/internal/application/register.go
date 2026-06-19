@@ -17,10 +17,23 @@ func NewRegisterApplication(
 	}
 }
 
-func (a *RegisterApplication) RegisterRunner(token string, insecureSkipTLSVerify bool) error {
-	if err := a.starliner.RegisterRunner(token, insecureSkipTLSVerify); err != nil {
+type RegisterRunnerInput struct {
+	Token             string
+	Name              string
+	Labels            []string
+	MaxConcurrentJobs int
+}
+
+func (a *RegisterApplication) RegisterRunner(input RegisterRunnerInput, insecureSkipTLSVerify bool) error {
+	if err := a.starliner.RegisterRunner(
+		input.Token,
+		input.Name,
+		input.Labels,
+		input.MaxConcurrentJobs,
+		insecureSkipTLSVerify,
+	); err != nil {
 		return err
 	}
 
-	return a.credentials.SaveToken(token)
+	return a.credentials.SaveToken(input.Token)
 }

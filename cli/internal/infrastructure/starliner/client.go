@@ -32,10 +32,13 @@ func NewClient(config port.ConfigStore, credentials port.CredentialsStore) *Clie
 }
 
 type RegisterRunnerRequest struct {
-	Token string `json:"token"`
+	Token             string   `json:"token"`
+	Name              string   `json:"name"`
+	Labels            []string `json:"labels"`
+	MaxConcurrentJobs int      `json:"maxConcurrentJobs"`
 }
 
-func (c *Client) RegisterRunner(token string, insecureSkipTLSVerify bool) error {
+func (c *Client) RegisterRunner(token, name string, labels []string, maxConcurrentJobs int, insecureSkipTLSVerify bool) error {
 	baseURL, err := c.config.BaseURL()
 	if err != nil {
 		return err
@@ -43,7 +46,12 @@ func (c *Client) RegisterRunner(token string, insecureSkipTLSVerify bool) error 
 
 	var body bytes.Buffer
 
-	if err := json.NewEncoder(&body).Encode(&RegisterRunnerRequest{Token: token}); err != nil {
+	if err := json.NewEncoder(&body).Encode(&RegisterRunnerRequest{
+		Token:             token,
+		Name:              name,
+		Labels:            labels,
+		MaxConcurrentJobs: maxConcurrentJobs,
+	}); err != nil {
 		return err
 	}
 
