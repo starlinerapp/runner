@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"starliner.app/runner/internal/domain/port"
@@ -17,6 +18,8 @@ type WorkerApplication struct {
 	heartbeat    port.HeartbeatGateway
 	workload     port.WorkloadTracker
 	executor     port.JobExecutor
+	claimMu      sync.Mutex
+	inflight     sync.Map // build ID -> struct{}
 }
 
 func NewWorkerApplication(
@@ -89,6 +92,9 @@ func (a *WorkerApplication) pollJobs(ctx context.Context, session port.JobSessio
 }
 
 func (a *WorkerApplication) claimAndRunJob(ctx context.Context, session port.JobSession) error {
+	a.claimMu.Lock()
+	defer a.claimMu.Unlock()
+
 	if a.workload != nil {
 		if a.maxCapacityReached() {
 			return nil
@@ -110,7 +116,18 @@ func (a *WorkerApplication) claimAndRunJob(ctx context.Context, session port.Job
 		return nil
 	}
 
-	go a.executeJob(ctx, session, *job)
+	if _, loaded := a.inflight.LoadOrStore(job.BuildID, struct{}{}); loaded {
+		if a.workload != nil {
+			a.workload.Decrement()
+		}
+		return nil
+	}
+
+	go func(j value.BuildJob) {
+		defer a.inflight.Delete(j.BuildID)
+		a.executeJob(ctx, session, j)
+	}(*job)
+
 	return nil
 }
 

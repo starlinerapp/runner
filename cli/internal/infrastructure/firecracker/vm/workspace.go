@@ -13,7 +13,6 @@ import (
 	"starliner.app/runner/internal/domain/value"
 	"starliner.app/runner/internal/infrastructure/firecracker/assets"
 	"starliner.app/runner/internal/infrastructure/firecracker/config"
-	"starliner.app/runner/internal/infrastructure/privileged"
 	"starliner.app/runner/internal/infrastructure/registry"
 )
 
@@ -31,7 +30,7 @@ func Start(vmDir string) (*exec.Cmd, error) {
 		return nil, fmt.Errorf("open firecracker log: %w", err)
 	}
 
-	cmd := privileged.Command("firecracker", "--api-sock", socketPath, "--config-file", configPath)
+	cmd := exec.Command("firecracker", "--api-sock", socketPath, "--config-file", configPath)
 	cmd.Dir = vmDir
 	cmd.Stdout = logFile
 	cmd.Stderr = logFile
