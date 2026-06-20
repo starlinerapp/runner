@@ -6,12 +6,14 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
 	"starliner.app/runner/internal/domain/value"
 	"starliner.app/runner/internal/infrastructure/firecracker/assets"
 	"starliner.app/runner/internal/infrastructure/firecracker/config"
+	"starliner.app/runner/internal/infrastructure/privileged"
 	"starliner.app/runner/internal/infrastructure/registry"
 )
 
@@ -29,7 +31,7 @@ func Start(vmDir string) (*exec.Cmd, error) {
 		return nil, fmt.Errorf("open firecracker log: %w", err)
 	}
 
-	cmd := exec.Command("firecracker", "--api-sock", socketPath, "--config-file", configPath)
+	cmd := privileged.Command("firecracker", "--api-sock", socketPath, "--config-file", configPath)
 	cmd.Dir = vmDir
 	cmd.Stdout = logFile
 	cmd.Stderr = logFile
@@ -42,26 +44,43 @@ func Start(vmDir string) (*exec.Cmd, error) {
 	}
 	_ = logFile.Close()
 
-	if err := waitRunning(cmd); err != nil {
+	if err := waitRunning(cmd, logPath); err != nil {
 		return nil, err
 	}
 
 	return cmd, nil
 }
 
-func waitRunning(cmd *exec.Cmd) error {
+func waitRunning(cmd *exec.Cmd, logPath string) error {
 	done := make(chan error, 1)
 	go func() { done <- cmd.Wait() }()
 
 	select {
 	case err := <-done:
 		if err != nil {
-			return fmt.Errorf("firecracker exited: %w", err)
+			return fmt.Errorf("firecracker exited: %w%s", err, tailLog(logPath))
 		}
-		return fmt.Errorf("firecracker exited immediately")
+		return fmt.Errorf("firecracker exited immediately%s", tailLog(logPath))
 	case <-time.After(200 * time.Millisecond):
 		return nil
 	}
+}
+
+func tailLog(path string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	text := strings.TrimSpace(string(data))
+	if text == "" {
+		return ""
+	}
+	const maxLines = 20
+	lines := strings.Split(text, "\n")
+	if len(lines) > maxLines {
+		lines = lines[len(lines)-maxLines:]
+	}
+	return "\n" + strings.Join(lines, "\n")
 }
 
 func copyRootfs(src, dst string) error {

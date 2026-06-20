@@ -89,15 +89,24 @@ func (a *WorkerApplication) pollJobs(ctx context.Context, session port.JobSessio
 }
 
 func (a *WorkerApplication) claimAndRunJob(ctx context.Context, session port.JobSession) error {
-	if a.workload != nil && a.maxCapacityReached() {
-		return nil
+	if a.workload != nil {
+		if a.maxCapacityReached() {
+			return nil
+		}
+		a.workload.Increment()
 	}
 
 	job, err := session.ClaimJob(ctx)
 	if err != nil {
+		if a.workload != nil {
+			a.workload.Decrement()
+		}
 		return fmt.Errorf("claim job: %w", err)
 	}
 	if job == nil {
+		if a.workload != nil {
+			a.workload.Decrement()
+		}
 		return nil
 	}
 
@@ -120,7 +129,6 @@ func (a *WorkerApplication) executeJob(
 	job value.BuildJob,
 ) {
 	if a.workload != nil {
-		a.workload.Increment()
 		defer a.workload.Decrement()
 	}
 
