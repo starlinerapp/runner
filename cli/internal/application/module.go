@@ -12,10 +12,15 @@ var Module = fx.Module(
 		NewVMApplication,
 		NewBuildApplication,
 		NewRegisterApplication,
+		NewWorkerApplication,
 		NewRunApplication,
 		fx.Annotate(
 			func(a *VMApplication) port.VM { return a },
 			fx.As(new(port.VM)),
+		),
+		fx.Annotate(
+			func(a *BuildApplication) port.JobExecutor { return a },
+			fx.As(new(port.JobExecutor)),
 		),
 	),
 )

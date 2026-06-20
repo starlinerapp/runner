@@ -32,6 +32,7 @@ func NewClient(vm port.VM) *Client {
 }
 
 func (c *Client) BuildAndPublish(
+	guest value.VM,
 	projectDir string,
 	dockerfilePath string,
 	registryUsername string,
@@ -41,17 +42,9 @@ func (c *Client) BuildAndPublish(
 ) (string, error) {
 	ctx := context.Background()
 
-	guest, err := c.vm.CreateVM()
-	if err != nil {
-		return "", fmt.Errorf("failed to create VM: %w", err)
-	}
-	defer func() {
-		_ = c.vm.DeleteVM(guest.ID)
-	}()
-
 	fmt.Printf("Waiting for buildkit at %s:%d...\n", guest.GuestIP, Port)
 	if err := Wait(guest.GuestIP, ConnectTimeout); err != nil {
-		c.vm.Diagnose(*guest)
+		c.vm.Diagnose(guest)
 		return "", err
 	}
 

@@ -8,7 +8,6 @@ var Module = fx.Module(
 		NewRegisterHandler,
 		NewInstallHandler,
 		NewVMHandler,
-		NewBuildHandler,
 		NewRunHandler,
 	),
 )

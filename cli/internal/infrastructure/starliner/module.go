@@ -12,5 +12,13 @@ var Module = fx.Module(
 			NewClient,
 			fx.As(new(port.Starliner)),
 		),
+		fx.Annotate(
+			NewJobGateway,
+			fx.As(new(port.JobGateway)),
+		),
+		fx.Annotate(
+			NewHeartbeatGateway,
+			fx.As(new(port.HeartbeatGateway)),
+		),
 	),
 )

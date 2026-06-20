@@ -14,26 +14,18 @@ import (
 )
 
 type Client struct {
-	config       port.ConfigStore
-	registration port.RegistrationStore
-	workload     port.WorkloadTracker
-	http         *http.Client
+	config port.ConfigStore
+	http   *http.Client
 }
 
-func NewClient(
-	config port.ConfigStore,
-	registration port.RegistrationStore,
-	workload port.WorkloadTracker,
-) *Client {
+func NewClient(config port.ConfigStore) *Client {
 	httpClient := &http.Client{
 		Timeout: 5 * time.Second,
 	}
 
 	return &Client{
-		config:       config,
-		registration: registration,
-		workload:     workload,
-		http:         httpClient,
+		config: config,
+		http:   httpClient,
 	}
 }
 
@@ -96,21 +88,4 @@ func (c *Client) RegisterRunner(token, name string, labels []string, maxConcurre
 	}
 
 	return nil
-}
-
-func (c *Client) maxConcurrentJobs() (int32, error) {
-	maxJobs, err := c.registration.MaxConcurrentJobs()
-	if err != nil {
-		return 0, err
-	}
-
-	return int32(maxJobs), nil
-}
-
-func (c *Client) activeJobs() int32 {
-	if c.workload == nil {
-		return 0
-	}
-
-	return int32(c.workload.ActiveJobs())
 }

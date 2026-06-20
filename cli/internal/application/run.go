@@ -5,17 +5,15 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-
-	"starliner.app/runner/internal/domain/port"
 )
 
 type RunApplication struct {
-	starliner port.Starliner
+	workerApplication *WorkerApplication
 }
 
-func NewRunApplication(starliner port.Starliner) *RunApplication {
+func NewRunApplication(workerApplication *WorkerApplication) *RunApplication {
 	return &RunApplication{
-		starliner: starliner,
+		workerApplication: workerApplication,
 	}
 }
 
@@ -23,5 +21,5 @@ func (a *RunApplication) Start(insecureSkipTLSVerify bool) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	return a.starliner.ServeHeartbeats(ctx, insecureSkipTLSVerify)
+	return a.workerApplication.Run(ctx, insecureSkipTLSVerify)
 }

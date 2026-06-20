@@ -5,7 +5,7 @@ Build and publish container images in Firecracker microVMs on Linux.
 ## Requirements
 
 - Linux (amd64)
-- `sudo` for install and builds
+- `sudo` for install
 
 ## Quick start
 
@@ -13,24 +13,19 @@ Build and publish container images in Firecracker microVMs on Linux.
 tar xf runner-linux-amd64.tar
 cd runner-linux-amd64
 sudo ./runner install
-
-sudo runner build \
-  --repository https://github.com/org/app.git \
-  --branch-name main \
-  --github-token "$GITHUB_TOKEN" \
-  --image registry.example.com/app \
-  --registry-username "$REGISTRY_USER" \
-  --registry-password "$REGISTRY_PASSWORD"
+sudo ./runner register
+sudo ./runner start
 ```
 
-Run `install` once from the extracted bundle. Builds use the installed binary at `/usr/local/bin/runner`. Images are tagged with the cloned commit SHA.
+Run `install` once from the extracted bundle. Register the runner with Starliner, then start the daemon to claim and execute remote build jobs.
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
 | `runner install` | Install the CLI, VM assets, Firecracker, and BuildKit |
-| `runner build` | Clone a repo, build a Dockerfile in a VM, and push to a registry |
+| `runner register` | Register this runner with Starliner |
+| `runner start` | Start the runner daemon |
 | `runner vm create` | Create a microVM |
 | `runner vm list` | List microVMs |
 | `runner vm delete <id>` | Remove a microVM |
