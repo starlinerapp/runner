@@ -19,7 +19,7 @@ import (
 const (
 	runnerTokenMetadataKey = "authorization"
 
-	defaultHeartbeatInterval = 30 * time.Second
+	defaultHeartbeatInterval = 5 * time.Second
 	minReconnectDelay        = time.Second
 	maxReconnectDelay        = 30 * time.Second
 )
