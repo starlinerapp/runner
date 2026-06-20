@@ -15,6 +15,7 @@ func Register(
 	build *handler.BuildHandler,
 	install *handler.InstallHandler,
 	vm *handler.VMHandler,
+	run *handler.RunHandler,
 ) {
 	rootCmd := &cobra.Command{
 		Version:       "0.0.1",
@@ -32,6 +33,7 @@ func Register(
 		build.NewBuildCmd(),
 		install.NewInstallCmd(),
 		vm.NewVMCmd(),
+		run.NewRunCmd(),
 	)
 
 	lc.Append(fx.Hook{

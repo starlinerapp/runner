@@ -12,6 +12,7 @@ var Module = fx.Module(
 		NewVMApplication,
 		NewBuildApplication,
 		NewRegisterApplication,
+		NewRunApplication,
 		fx.Annotate(
 			func(a *VMApplication) port.VM { return a },
 			fx.As(new(port.VM)),

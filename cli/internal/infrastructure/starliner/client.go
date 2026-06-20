@@ -57,7 +57,7 @@ func (c *Client) RegisterRunner(token, name string, labels []string, maxConcurre
 
 	req, err := http.NewRequest(
 		http.MethodPost,
-		strings.TrimRight(baseURL, "/")+"/runners/register",
+		strings.TrimRight(baseURL, "/")+"/api/runners/register",
 		&body,
 	)
 	if err != nil {
