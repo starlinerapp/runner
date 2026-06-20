@@ -25,7 +25,7 @@ const (
 )
 
 func (c *Client) ServeHeartbeats(ctx context.Context, insecureSkipTLSVerify bool) error {
-	token, err := c.credentials.Token()
+	token, err := c.registration.Token()
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func (c *Client) ServeHeartbeats(ctx context.Context, insecureSkipTLSVerify bool
 			return nil
 		}
 
-		nextInterval, err := runHeartbeatSession(ctx, client, token, &sequence, interval)
+		nextInterval, err := c.runHeartbeatSession(ctx, client, token, &sequence, interval)
 		if err == nil {
 			reconnectDelay = minReconnectDelay
 			if nextInterval > 0 {
@@ -94,7 +94,7 @@ func (c *Client) ServeHeartbeats(ctx context.Context, insecureSkipTLSVerify bool
 	}
 }
 
-func runHeartbeatSession(
+func (c *Client) runHeartbeatSession(
 	ctx context.Context,
 	client v1.RunnerSchedulerServiceClient,
 	token string,
@@ -107,11 +107,18 @@ func runHeartbeatSession(
 		return 0, fmt.Errorf("connect to scheduler: %w", err)
 	}
 	sendHeartbeat := func() error {
+		maxJobs, err := c.maxConcurrentJobs()
+		if err != nil {
+			return err
+		}
+
 		*sequence++
 		return stream.Send(&v1.RunnerMessage{
 			Payload: &v1.RunnerMessage_Heartbeat{
 				Heartbeat: &v1.RunnerHeartbeat{
-					Sequence: *sequence,
+					Sequence:          *sequence,
+					MaxConcurrentJobs: maxJobs,
+					ActiveJobs:        c.activeJobs(),
 				},
 			},
 		})

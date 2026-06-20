@@ -3,17 +3,17 @@ package application
 import "starliner.app/runner/internal/domain/port"
 
 type RegisterApplication struct {
-	starliner   port.Starliner
-	credentials port.CredentialsStore
+	starliner    port.Starliner
+	registration port.RegistrationStore
 }
 
 func NewRegisterApplication(
 	starliner port.Starliner,
-	credentials port.CredentialsStore,
+	registration port.RegistrationStore,
 ) *RegisterApplication {
 	return &RegisterApplication{
-		starliner:   starliner,
-		credentials: credentials,
+		starliner:    starliner,
+		registration: registration,
 	}
 }
 
@@ -35,5 +35,8 @@ func (a *RegisterApplication) RegisterRunner(input RegisterRunnerInput, insecure
 		return err
 	}
 
-	return a.credentials.SaveToken(input.Token)
+	return a.registration.SaveRegistration(port.RunnerRegistration{
+		Token:             input.Token,
+		MaxConcurrentJobs: input.MaxConcurrentJobs,
+	})
 }

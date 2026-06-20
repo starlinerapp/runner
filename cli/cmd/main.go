@@ -14,6 +14,7 @@ import (
 	"starliner.app/runner/internal/infrastructure/git"
 	"starliner.app/runner/internal/infrastructure/registry"
 	"starliner.app/runner/internal/infrastructure/starliner"
+	"starliner.app/runner/internal/infrastructure/workload"
 	"starliner.app/runner/internal/presentation/cli"
 )
 
@@ -25,6 +26,7 @@ func main() {
 		credentials.Module,
 		buildkit.Module,
 		starliner.Module,
+		workload.Module,
 		git.Module,
 		bundle.Module,
 		firecracker.Module,

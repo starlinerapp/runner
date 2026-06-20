@@ -1,4 +1,4 @@
-package credentials
+package workload
 
 import (
 	"go.uber.org/fx"
@@ -6,11 +6,11 @@ import (
 )
 
 var Module = fx.Module(
-	"credentials",
+	"workload",
 	fx.Provide(
 		fx.Annotate(
-			New,
-			fx.As(new(port.RegistrationStore)),
+			NewTracker,
+			fx.As(new(port.WorkloadTracker)),
 		),
 	),
 )
