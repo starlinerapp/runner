@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/url"
 	"time"
@@ -106,9 +107,11 @@ func runHeartbeatSession(
 	if err != nil {
 		return 0, fmt.Errorf("connect to scheduler: %w", err)
 	}
+	log.Printf("heartbeat stream connected")
 
 	sendHeartbeat := func() error {
 		*sequence++
+		log.Printf("heartbeat sent sequence=%d", *sequence)
 		return stream.Send(&v1.RunnerMessage{
 			Payload: &v1.RunnerMessage_Heartbeat{
 				Heartbeat: &v1.RunnerHeartbeat{
@@ -145,11 +148,19 @@ func runHeartbeatSession(
 		}
 
 		nextInterval := interval
+		leaseTTL := time.Duration(0)
 		if ttl := ack.HeartbeatAck.GetLeaseTtl(); ttl != nil {
 			if ttlDuration := ttl.AsDuration(); ttlDuration > 0 {
 				nextInterval = ttlDuration
+				leaseTTL = ttlDuration
 			}
 		}
+		log.Printf(
+			"heartbeat ack received sequence=%d lease_ttl=%s next_interval=%s",
+			ack.HeartbeatAck.GetSequence(),
+			leaseTTL,
+			nextInterval,
+		)
 
 		select {
 		case <-ctx.Done():
