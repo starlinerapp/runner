@@ -23,12 +23,12 @@ func (h *RunHandler) NewRunCmd() *cobra.Command {
 	opts := &RunOpts{}
 
 	cmd := &cobra.Command{
-		Use:   "run",
-		Short: "Run the runner daemon",
-		Long:  "Star the runner daemon",
+		Use:   "start",
+		Short: "Start the runner daemon",
+		Long:  "Start the runner daemon",
 		Args:  cobra.NoArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return h.runApplication.Run(opts.InsecureSkipTLSVerify)
+			return h.runApplication.Start(opts.InsecureSkipTLSVerify)
 		},
 	}
 

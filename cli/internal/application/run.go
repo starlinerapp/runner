@@ -19,7 +19,7 @@ func NewRunApplication(starliner port.Starliner) *RunApplication {
 	}
 }
 
-func (a *RunApplication) Run(insecureSkipTLSVerify bool) error {
+func (a *RunApplication) Start(insecureSkipTLSVerify bool) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
