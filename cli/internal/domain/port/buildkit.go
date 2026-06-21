@@ -15,5 +15,6 @@ type Buildkit interface {
 		registryToken string,
 		imageRef value.ImageRef,
 		args []*Arg,
+		publishLog LogPublisher,
 	) (string, error)
 }

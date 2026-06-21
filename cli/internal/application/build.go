@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"path"
-	"strings"
 
 	"starliner.app/runner/internal/domain/port"
 	"starliner.app/runner/internal/domain/value"
@@ -87,19 +86,11 @@ func (a *BuildApplication) ExecuteJob(
 		job.RegistryToken,
 		imageRef.WithTag(commitHash),
 		args,
+		reporter.PublishLog,
 	)
 	if err != nil {
 		a.vm.Diagnose(*guest)
 		return err
-	}
-
-	if logs != "" {
-		for _, line := range strings.Split(logs, "\n") {
-			if line == "" {
-				continue
-			}
-			reporter.PublishLog(line + "\n")
-		}
 	}
 
 	reporter.SendResult(value.BuildResult{
