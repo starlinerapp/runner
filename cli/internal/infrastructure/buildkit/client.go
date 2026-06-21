@@ -42,8 +42,6 @@ func (c *Client) BuildAndPublish(
 ) (string, error) {
 	ctx := context.Background()
 
-	waitMsg := fmt.Sprintf("Waiting for buildkit at %s:%d...\n", guest.GuestIP, Port)
-	publishLog(waitMsg)
 	if err := Wait(guest.GuestIP, ConnectTimeout); err != nil {
 		c.vm.Diagnose(guest)
 		return "", err

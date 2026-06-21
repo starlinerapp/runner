@@ -166,8 +166,6 @@ func (a *WorkerApplication) executeJob(
 		return
 	}
 
-	reporter.PublishLog(fmt.Sprintf("starting build %d\n", job.BuildID))
-
 	if err := a.executor.ExecuteJob(ctx, job, reporter); err != nil {
 		msg := fmt.Sprintf("build failed: %v\n", err)
 		reporter.PublishLog(msg)

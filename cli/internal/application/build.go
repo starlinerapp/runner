@@ -45,7 +45,6 @@ func (a *BuildApplication) ExecuteJob(
 	}()
 
 	commitHash := workspace.CommitSHA()
-	reporter.PublishLog(fmt.Sprintf("checked out %s\n", commitHash))
 
 	imageRef, err := value.ParseImageRef(path.Join(job.ImageRegistry, job.ImageName))
 	if err != nil {
@@ -58,8 +57,6 @@ func (a *BuildApplication) ExecuteJob(
 		buildContext = "."
 	}
 
-	reporter.PublishLog("provisioning firecracker microVM\n")
-
 	guest, err := a.vm.CreateVM()
 	if err != nil {
 		return fmt.Errorf("create VM: %w", err)
@@ -68,8 +65,6 @@ func (a *BuildApplication) ExecuteJob(
 		reporter.PublishLog(fmt.Sprintf("tearing down microVM %s\n", guest.ID))
 		_ = a.vm.DeleteVM(guest.ID)
 	}()
-
-	reporter.PublishLog(fmt.Sprintf("microVM %s ready at %s\n", guest.ID, guest.GuestIP))
 
 	args := make([]*port.Arg, 0, len(job.Args))
 	for _, arg := range job.Args {
