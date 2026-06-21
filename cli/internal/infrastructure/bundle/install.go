@@ -11,6 +11,7 @@ import (
 	"starliner.app/runner/internal/infrastructure/firecracker/assets"
 	"starliner.app/runner/internal/infrastructure/firecracker/install"
 	"starliner.app/runner/internal/infrastructure/privileged"
+	"starliner.app/runner/internal/infrastructure/systemd"
 )
 
 const BinaryPath = assets.InstalledBinaryDir + "/runner"
@@ -70,10 +71,17 @@ func (c *Client) Install(baseURL string) error {
 		return fmt.Errorf("save config: %w", err)
 	}
 
+	if err := systemd.Install(); err != nil {
+		return fmt.Errorf("install systemd service: %w", err)
+	}
+
 	fmt.Println("Runner installed successfully")
 	fmt.Printf("  binary: %s\n", BinaryPath)
 	fmt.Printf("  assets: %s\n", assets.InstalledAssetsDir)
 	fmt.Printf("  base URL: %s\n", baseURL)
+	fmt.Printf("  service: %s\n", systemd.UnitPath())
+	fmt.Println("After registering, start the runner with:")
+	fmt.Println("  sudo systemctl enable --now starliner-runner")
 	return nil
 }
 
