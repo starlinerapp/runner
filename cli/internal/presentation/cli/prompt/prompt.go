@@ -10,9 +10,13 @@ import (
 
 func String(r io.Reader, w io.Writer, label, defaultValue string) (string, error) {
 	if defaultValue != "" {
-		fmt.Fprintf(w, "%s [%s]: ", label, defaultValue)
+		if _, err := fmt.Fprintf(w, "%s [%s]: ", label, defaultValue); err != nil {
+			return "", err
+		}
 	} else {
-		fmt.Fprintf(w, "%s: ", label)
+		if _, err := fmt.Fprintf(w, "%s: ", label); err != nil {
+			return "", err
+		}
 	}
 
 	scanner := bufio.NewScanner(r)
@@ -52,7 +56,9 @@ func Labels(r io.Reader, w io.Writer, defaultLabels []string) ([]string, error) 
 func PositiveInt(r io.Reader, w io.Writer, label string, defaultValue int) (int, error) {
 	scanner := bufio.NewScanner(r)
 	for {
-		fmt.Fprintf(w, "%s [%d]: ", label, defaultValue)
+		if _, err := fmt.Fprintf(w, "%s [%d]: ", label, defaultValue); err != nil {
+			return 0, err
+		}
 		if !scanner.Scan() {
 			if err := scanner.Err(); err != nil {
 				return 0, err
@@ -67,7 +73,9 @@ func PositiveInt(r io.Reader, w io.Writer, label string, defaultValue int) (int,
 
 		value, err := strconv.Atoi(text)
 		if err != nil || value < 1 {
-			fmt.Fprintln(w, "Enter a positive integer.")
+			if _, writeErr := fmt.Fprintln(w, "Enter a positive integer."); writeErr != nil {
+				return 0, writeErr
+			}
 			continue
 		}
 
