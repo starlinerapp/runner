@@ -29,7 +29,7 @@ func NewClient(config port.ConfigStore) *Client {
 	}
 }
 
-type RegisterRunnerRequest struct {
+type registerRunnerRequest struct {
 	Token             string   `json:"token"`
 	Name              string   `json:"name"`
 	Labels            []string `json:"labels"`
@@ -44,7 +44,7 @@ func (c *Client) RegisterRunner(token, name string, labels []string, maxConcurre
 
 	var body bytes.Buffer
 
-	if err := json.NewEncoder(&body).Encode(&RegisterRunnerRequest{
+	if err := json.NewEncoder(&body).Encode(&registerRunnerRequest{
 		Token:             token,
 		Name:              name,
 		Labels:            labels,

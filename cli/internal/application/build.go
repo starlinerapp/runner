@@ -32,10 +32,6 @@ func (a *BuildApplication) ExecuteJob(
 	job value.BuildJob,
 	reporter port.JobReporter,
 ) error {
-	if reporter == nil {
-		reporter = &noopJobReporter{}
-	}
-
 	reporter.PublishLog(fmt.Sprintf("Cloning %s (branch %s)...\n", job.GitURL, job.BranchName))
 
 	workspace, err := a.git.Checkout(job.GitURL, job.BranchName, job.AccessToken)
@@ -102,8 +98,3 @@ func (a *BuildApplication) ExecuteJob(
 
 	return nil
 }
-
-type noopJobReporter struct{}
-
-func (noopJobReporter) PublishLog(string)            {}
-func (noopJobReporter) SendResult(value.BuildResult) {}

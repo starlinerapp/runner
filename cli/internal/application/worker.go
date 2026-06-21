@@ -94,32 +94,24 @@ func (a *WorkerApplication) claimAndRunJob(ctx context.Context, session port.Job
 	a.claimMu.Lock()
 	defer a.claimMu.Unlock()
 
-	if a.workload != nil {
-		if a.maxCapacityReached() {
-			return nil
-		}
-		a.workload.Increment()
+	if a.maxCapacityReached() {
+		return nil
 	}
+	a.workload.Increment()
 
 	job, err := session.ClaimJob(ctx)
 	if err != nil {
-		if a.workload != nil {
-			a.workload.Decrement()
-		}
+		a.workload.Decrement()
 		log.Printf("claim job: %v", err)
 		return nil
 	}
 	if job == nil {
-		if a.workload != nil {
-			a.workload.Decrement()
-		}
+		a.workload.Decrement()
 		return nil
 	}
 
 	if _, loaded := a.inflight.LoadOrStore(job.BuildID, struct{}{}); loaded {
-		if a.workload != nil {
-			a.workload.Decrement()
-		}
+		a.workload.Decrement()
 		return nil
 	}
 
@@ -145,9 +137,7 @@ func (a *WorkerApplication) executeJob(
 	session port.JobSession,
 	job value.BuildJob,
 ) {
-	if a.workload != nil {
-		defer a.workload.Decrement()
-	}
+	defer a.workload.Decrement()
 
 	reporter := &jobReporter{
 		session: session,
@@ -157,18 +147,6 @@ func (a *WorkerApplication) executeJob(
 	runnerName, _ := a.registration.Name()
 	if runnerName != "" {
 		reporter.PublishLog(fmt.Sprintf("Picked up by runner %s\n", runnerName))
-	}
-
-	if a.executor == nil {
-		msg := "job executor not configured\n"
-		reporter.PublishLog(msg)
-		reporter.SendResult(value.BuildResult{
-			BuildID:      job.BuildID,
-			DeploymentID: job.DeploymentID,
-			Logs:         msg,
-			Status:       value.BuildStatusFailed,
-		})
-		return
 	}
 
 	if err := a.executor.ExecuteJob(ctx, job, reporter); err != nil {

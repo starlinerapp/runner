@@ -142,10 +142,7 @@ func (s *heartbeatSession) runHeartbeatSession(
 			return err
 		}
 
-		active := int32(0)
-		if s.workload != nil {
-			active = int32(s.workload.ActiveJobs())
-		}
+		active := int32(s.workload.ActiveJobs())
 
 		*sequence++
 		return stream.Send(&v1.HeartbeatMessage{
