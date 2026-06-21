@@ -35,8 +35,7 @@ func (c *Client) BuildAndPublish(
 	guest value.VM,
 	projectDir string,
 	dockerfilePath string,
-	registryUsername string,
-	registryPassword string,
+	registryToken string,
 	imageRef value.ImageRef,
 	args []*port.Arg,
 ) (string, error) {
@@ -107,11 +106,14 @@ func (c *Client) BuildAndPublish(
 		frontendAttrs["build-arg:"+a.Name] = a.Value
 	}
 
+	if registryToken == "" {
+		return "", fmt.Errorf("registry push token is required")
+	}
+
 	authConfigs := map[string]types.AuthConfig{}
 	if host := imageRef.RegistryHost(); host != "" {
 		authConfigs[host] = types.AuthConfig{
-			Username: registryUsername,
-			Password: registryPassword,
+			RegistryToken: registryToken,
 		}
 	}
 

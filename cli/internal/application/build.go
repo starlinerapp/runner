@@ -84,7 +84,6 @@ func (a *BuildApplication) ExecuteJob(
 		*guest,
 		path.Join(workspace.Path(), buildContext),
 		job.DockerfilePath,
-		"",
 		job.RegistryToken,
 		imageRef.WithTag(commitHash),
 		args,

@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -84,9 +85,7 @@ func (a *WorkerApplication) pollJobs(ctx context.Context, session port.JobSessio
 		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
-			if err := a.claimAndRunJob(ctx, session); err != nil {
-				return err
-			}
+			_ = a.claimAndRunJob(ctx, session)
 		}
 	}
 }
@@ -107,7 +106,8 @@ func (a *WorkerApplication) claimAndRunJob(ctx context.Context, session port.Job
 		if a.workload != nil {
 			a.workload.Decrement()
 		}
-		return fmt.Errorf("claim job: %w", err)
+		log.Printf("claim job: %v", err)
+		return nil
 	}
 	if job == nil {
 		if a.workload != nil {
@@ -177,6 +177,7 @@ func (a *WorkerApplication) executeJob(
 			Logs:         msg,
 			Status:       value.BuildStatusFailed,
 		})
+		return
 	}
 }
 

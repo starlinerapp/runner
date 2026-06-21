@@ -12,8 +12,7 @@ type Buildkit interface {
 		guest value.VM,
 		projectDir string,
 		dockerfilePath string,
-		registryUsername string,
-		registryPassword string,
+		registryToken string,
 		imageRef value.ImageRef,
 		args []*Arg,
 	) (string, error)
