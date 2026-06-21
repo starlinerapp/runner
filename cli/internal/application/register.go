@@ -37,6 +37,7 @@ func (a *RegisterApplication) RegisterRunner(input RegisterRunnerInput, insecure
 
 	return a.registration.SaveRegistration(port.RunnerRegistration{
 		Token:             input.Token,
+		Name:              input.Name,
 		MaxConcurrentJobs: input.MaxConcurrentJobs,
 	})
 }

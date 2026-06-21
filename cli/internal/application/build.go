@@ -36,6 +36,8 @@ func (a *BuildApplication) ExecuteJob(
 		reporter = &noopJobReporter{}
 	}
 
+	reporter.PublishLog(fmt.Sprintf("Cloning %s (branch %s)...\n", job.GitURL, job.BranchName))
+
 	workspace, err := a.git.Checkout(job.GitURL, job.BranchName, job.AccessToken)
 	if err != nil {
 		return err

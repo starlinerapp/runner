@@ -154,6 +154,11 @@ func (a *WorkerApplication) executeJob(
 		job:     job,
 	}
 
+	runnerName, _ := a.registration.Name()
+	if runnerName != "" {
+		reporter.PublishLog(fmt.Sprintf("Picked up by runner %s\n", runnerName))
+	}
+
 	if a.executor == nil {
 		msg := "job executor not configured\n"
 		reporter.PublishLog(msg)

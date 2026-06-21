@@ -61,3 +61,7 @@ func (r *Runtime) Teardown(record value.VM) error {
 func (r *Runtime) Diagnose(record value.VM) {
 	vm.PrintDiagnostics(record.Dir, record.GuestIP)
 }
+
+func (r *Runtime) Running(record value.VM) bool {
+	return vm.ProcessRunning(record.FirecrackerPID)
+}

@@ -14,6 +14,7 @@ const credentialsFile = "credentials.json"
 
 type fileCredentials struct {
 	Token             string `json:"token"`
+	Name              string `json:"name"`
 	MaxConcurrentJobs int    `json:"maxConcurrentJobs"`
 }
 
@@ -35,6 +36,7 @@ func (s *Store) SaveRegistration(registration port.RunnerRegistration) error {
 
 	data, err := json.MarshalIndent(fileCredentials{
 		Token:             registration.Token,
+		Name:              registration.Name,
 		MaxConcurrentJobs: registration.MaxConcurrentJobs,
 	}, "", "  ")
 	if err != nil {
@@ -55,6 +57,15 @@ func (s *Store) Token() (string, error) {
 	}
 
 	return creds.Token, nil
+}
+
+func (s *Store) Name() (string, error) {
+	creds, err := s.readCredentials()
+	if err != nil {
+		return "", err
+	}
+
+	return creds.Name, nil
 }
 
 func (s *Store) MaxConcurrentJobs() (int, error) {

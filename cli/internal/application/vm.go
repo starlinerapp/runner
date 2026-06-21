@@ -28,6 +28,8 @@ func (a *VMApplication) CreateVM() (*value.VM, error) {
 	var record *value.VM
 
 	err := a.registry.WithLock(func(m port.MutableVMRegistry) error {
+		a.pruneStale(m)
+
 		res, err := fleet.Allocate(m.VMs())
 		if err != nil {
 			return err
@@ -63,7 +65,13 @@ func (a *VMApplication) CreateVM() (*value.VM, error) {
 }
 
 func (a *VMApplication) ListVMs() ([]value.VM, error) {
-	return a.registry.List()
+	var vms []value.VM
+	err := a.registry.WithLock(func(m port.MutableVMRegistry) error {
+		a.pruneStale(m)
+		vms = append(vms, m.VMs()...)
+		return nil
+	})
+	return vms, err
 }
 
 func (a *VMApplication) Diagnose(vm value.VM) {
@@ -76,10 +84,7 @@ func (a *VMApplication) DeleteVM(id string) error {
 		return err
 	}
 
-	err = a.runtime.Teardown(*record)
-	if err != nil {
-		return err
-	}
+	_ = a.runtime.Teardown(*record)
 
 	return a.registry.WithLock(func(m port.MutableVMRegistry) error {
 		if _, ok := m.Remove(id); !ok {
@@ -87,4 +92,18 @@ func (a *VMApplication) DeleteVM(id string) error {
 		}
 		return nil
 	})
+}
+
+func (a *VMApplication) pruneStale(m port.MutableVMRegistry) {
+	stale := make([]value.VM, 0)
+	for _, vm := range m.VMs() {
+		if !a.runtime.Running(vm) {
+			stale = append(stale, vm)
+		}
+	}
+
+	for _, vm := range stale {
+		_ = a.runtime.Teardown(vm)
+		m.Remove(vm.ID)
+	}
 }
