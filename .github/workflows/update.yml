@@ -1,0 +1,32 @@
+name: Update Nix flake inputs
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: DeterminateSystems/determinate-nix-action@v3
+
+      - name: Set date
+        id: date
+        run: echo "yyyymmdd=$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Update flake lock
+        run: nix flake update
+
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          title: "chore: bump nix flake inputs (${{ steps.date.outputs.yyyymmdd }})"
+          commit-message: "chore: bump nix flake inputs"
+          branch: chore/nix-flake-update-${{ steps.date.outputs.yyyymmdd }}
