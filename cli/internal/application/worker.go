@@ -94,7 +94,11 @@ func (a *WorkerApplication) claimAndRunJob(ctx context.Context, session port.Job
 	a.claimMu.Lock()
 	defer a.claimMu.Unlock()
 
-	if a.maxCapacityReached() {
+	atCapacity, err := a.maxCapacityReached()
+	if err != nil {
+		log.Printf("max concurrent jobs: %v", err)
+	}
+	if atCapacity {
 		return nil
 	}
 	a.workload.Increment()
@@ -123,13 +127,13 @@ func (a *WorkerApplication) claimAndRunJob(ctx context.Context, session port.Job
 	return nil
 }
 
-func (a *WorkerApplication) maxCapacityReached() bool {
+func (a *WorkerApplication) maxCapacityReached() (bool, error) {
 	maxJobs, err := a.registration.MaxConcurrentJobs()
 	if err != nil {
-		return false
+		return true, err
 	}
 
-	return a.workload.ActiveJobs() >= maxJobs
+	return a.workload.ActiveJobs() >= maxJobs, nil
 }
 
 func (a *WorkerApplication) executeJob(

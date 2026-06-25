@@ -82,7 +82,6 @@ type heartbeatSession struct {
 }
 
 func (s *heartbeatSession) Run(ctx context.Context) error {
-	var sequence uint64
 	interval := defaultHeartbeatInterval
 	reconnectDelay := minReconnectDelay
 
@@ -91,7 +90,7 @@ func (s *heartbeatSession) Run(ctx context.Context) error {
 			return nil
 		}
 
-		nextInterval, err := s.runHeartbeatSession(ctx, &sequence, interval)
+		nextInterval, err := s.runHeartbeatSession(ctx, interval)
 		if err == nil {
 			reconnectDelay = minReconnectDelay
 			if nextInterval > 0 {
@@ -127,9 +126,10 @@ func (s *heartbeatSession) Run(ctx context.Context) error {
 
 func (s *heartbeatSession) runHeartbeatSession(
 	ctx context.Context,
-	sequence *uint64,
 	interval time.Duration,
 ) (time.Duration, error) {
+	var sequence uint64
+
 	streamCtx := metadata.NewOutgoingContext(ctx, metadata.Pairs(runnerTokenMetadataKey, s.token))
 	stream, err := s.client.StreamHeartbeats(streamCtx)
 	if err != nil {
@@ -144,11 +144,11 @@ func (s *heartbeatSession) runHeartbeatSession(
 
 		active := int32(s.workload.ActiveJobs())
 
-		*sequence++
+		sequence++
 		return stream.Send(&v1.HeartbeatMessage{
 			Payload: &v1.HeartbeatMessage_Heartbeat{
 				Heartbeat: &v1.RunnerHeartbeat{
-					Sequence:          *sequence,
+					Sequence:          sequence,
 					MaxConcurrentJobs: int32(maxJobs),
 					ActiveJobs:        active,
 				},
@@ -174,11 +174,11 @@ func (s *heartbeatSession) runHeartbeatSession(
 			return 0, fmt.Errorf("unsupported heartbeat ack message type %T", msg.GetPayload())
 		}
 
-		if ack.HeartbeatAck.GetSequence() != *sequence {
+		if ack.HeartbeatAck.GetSequence() != sequence {
 			return 0, fmt.Errorf(
 				"heartbeat ack sequence mismatch: got %d want %d",
 				ack.HeartbeatAck.GetSequence(),
-				*sequence,
+				sequence,
 			)
 		}
 
