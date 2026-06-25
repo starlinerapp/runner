@@ -9,9 +9,9 @@ import (
 	"starliner.app/runner/internal/infrastructure/buildkit"
 	"starliner.app/runner/internal/infrastructure/bundle"
 	"starliner.app/runner/internal/infrastructure/config"
-	"starliner.app/runner/internal/infrastructure/credentials"
 	"starliner.app/runner/internal/infrastructure/firecracker"
 	"starliner.app/runner/internal/infrastructure/git"
+	"starliner.app/runner/internal/infrastructure/registration"
 	"starliner.app/runner/internal/infrastructure/registry"
 	"starliner.app/runner/internal/infrastructure/starliner"
 	"starliner.app/runner/internal/infrastructure/workload"
@@ -23,7 +23,7 @@ func main() {
 		fx.NopLogger,
 		registry.Module,
 		config.Module,
-		credentials.Module,
+		registration.Module,
 		buildkit.Module,
 		starliner.Module,
 		workload.Module,

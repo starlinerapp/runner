@@ -1,4 +1,4 @@
-package credentials
+package registration
 
 import (
 	"go.uber.org/fx"
@@ -6,7 +6,7 @@ import (
 )
 
 var Module = fx.Module(
-	"credentials",
+	"registration",
 	fx.Provide(
 		fx.Annotate(
 			New,
