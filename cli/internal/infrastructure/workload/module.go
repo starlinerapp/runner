@@ -1,4 +1,4 @@
-package bundle
+package workload
 
 import (
 	"go.uber.org/fx"
@@ -6,11 +6,11 @@ import (
 )
 
 var Module = fx.Module(
-	"bundle",
+	"workload",
 	fx.Provide(
 		fx.Annotate(
-			NewClient,
-			fx.As(new(port.Installer)),
+			NewTracker,
+			fx.As(new(port.WorkloadTracker)),
 		),
 	),
 )

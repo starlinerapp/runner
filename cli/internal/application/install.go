@@ -10,6 +10,6 @@ func NewInstallApplication(installer port.Installer) *InstallApplication {
 	return &InstallApplication{installer: installer}
 }
 
-func (a *InstallApplication) Install() error {
-	return a.installer.Install()
+func (a *InstallApplication) Install(baseURL string) error {
+	return a.installer.Install(baseURL)
 }

@@ -11,9 +11,10 @@ import (
 func Register(
 	lc fx.Lifecycle,
 	sd fx.Shutdowner,
-	build *handler.BuildHandler,
+	register *handler.RegisterHandler,
 	install *handler.InstallHandler,
 	vm *handler.VMHandler,
+	run *handler.RunHandler,
 ) {
 	rootCmd := &cobra.Command{
 		Version:       "0.0.1",
@@ -27,9 +28,10 @@ func Register(
 	}
 
 	rootCmd.AddCommand(
-		build.NewBuildCmd(),
+		register.NewRegisterCmd(),
 		install.NewInstallCmd(),
 		vm.NewVMCmd(),
+		run.NewRunCmd(),
 	)
 
 	lc.Append(fx.Hook{

@@ -32,26 +32,18 @@ func NewClient(vm port.VM) *Client {
 }
 
 func (c *Client) BuildAndPublish(
+	guest value.VM,
 	projectDir string,
 	dockerfilePath string,
-	registryUsername string,
-	registryPassword string,
+	registryToken string,
 	imageRef value.ImageRef,
 	args []*port.Arg,
+	publishLog port.LogPublisher,
 ) (string, error) {
 	ctx := context.Background()
 
-	guest, err := c.vm.CreateVM()
-	if err != nil {
-		return "", fmt.Errorf("failed to create VM: %w", err)
-	}
-	defer func() {
-		_ = c.vm.DeleteVM(guest.ID)
-	}()
-
-	fmt.Printf("Waiting for buildkit at %s:%d...\n", guest.GuestIP, Port)
 	if err := Wait(guest.GuestIP, ConnectTimeout); err != nil {
-		c.vm.Diagnose(*guest)
+		c.vm.Diagnose(guest)
 		return "", err
 	}
 
@@ -114,11 +106,14 @@ func (c *Client) BuildAndPublish(
 		frontendAttrs["build-arg:"+a.Name] = a.Value
 	}
 
+	if registryToken == "" {
+		return "", fmt.Errorf("registry push token is required")
+	}
+
 	authConfigs := map[string]types.AuthConfig{}
 	if host := imageRef.RegistryHost(); host != "" {
 		authConfigs[host] = types.AuthConfig{
-			Username: registryUsername,
-			Password: registryPassword,
+			RegistryToken: registryToken,
 		}
 	}
 
@@ -187,19 +182,41 @@ func (c *Client) BuildAndPublish(
 		return fmt.Errorf("build and push failed: %w", err)
 	})
 
+	logOut := &logWriter{publish: publishLog}
+
 	eg.Go(func() error {
-		d, err := progressui.NewDisplay(os.Stderr, progressui.TtyMode)
+		d, err := progressui.NewDisplay(logOut, progressui.PlainMode)
 		if err != nil {
-			d, _ = progressui.NewDisplay(os.Stdout, progressui.PlainMode)
+			return err
 		}
 		_, err = d.UpdateFrom(context.TODO(), statusCh)
 		return err
 	})
 
 	if err := eg.Wait(); err != nil {
-		return "", err
+		return logOut.String(), err
 	}
-	return "", nil
+	return logOut.String(), nil
+}
+
+type logWriter struct {
+	buf     strings.Builder
+	publish port.LogPublisher
+}
+
+func (w *logWriter) Write(p []byte) (int, error) {
+	n, err := w.buf.Write(p)
+	if err != nil {
+		return n, err
+	}
+	if len(p) > 0 {
+		w.publish(string(p))
+	}
+	return len(p), nil
+}
+
+func (w *logWriter) String() string {
+	return w.buf.String()
 }
 
 const registryBuildCacheTag = "buildcache"

@@ -1,5 +1,5 @@
 package port
 
 type Installer interface {
-	Install() error
+	Install(baseURL string) error
 }

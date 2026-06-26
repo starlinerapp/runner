@@ -9,11 +9,12 @@ type Arg struct {
 
 type Buildkit interface {
 	BuildAndPublish(
+		guest value.VM,
 		projectDir string,
 		dockerfilePath string,
-		registryUsername string,
-		registryPassword string,
+		registryToken string,
 		imageRef value.ImageRef,
 		args []*Arg,
+		publishLog LogPublisher,
 	) (string, error)
 }

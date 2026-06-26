@@ -1,4 +1,4 @@
-package bundle
+package config
 
 import (
 	"go.uber.org/fx"
@@ -6,11 +6,11 @@ import (
 )
 
 var Module = fx.Module(
-	"bundle",
+	"config",
 	fx.Provide(
 		fx.Annotate(
-			NewClient,
-			fx.As(new(port.Installer)),
+			New,
+			fx.As(new(port.ConfigStore)),
 		),
 	),
 )
