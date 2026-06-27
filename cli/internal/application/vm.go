@@ -49,7 +49,6 @@ func (a *VMApplication) CreateVM() (*value.VM, error) {
 			SubnetOctet:    res.SubnetOctet,
 			GuestCID:       res.GuestCID,
 			FirecrackerPID: provisioned.FirecrackerPID,
-			DNSMasqPID:     provisioned.DNSMasqPID,
 			CreatedAt:      time.Now().UTC(),
 		}
 

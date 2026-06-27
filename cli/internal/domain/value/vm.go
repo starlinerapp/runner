@@ -11,6 +11,5 @@ type VM struct {
 	SubnetOctet    int
 	GuestCID       uint32
 	FirecrackerPID int
-	DNSMasqPID     int
 	CreatedAt      time.Time
 }
