@@ -10,7 +10,7 @@ import (
 
 func Teardown(record value.VM) {
 	stopProcess(record.FirecrackerPID)
-	network.Destroy(record.Tap, record.DNSMasqPID)
+	network.Destroy(record.Tap)
 	_ = os.RemoveAll(record.Dir)
 }
 

@@ -16,7 +16,6 @@ type RecordDTO struct {
 	SubnetOctet    int    `json:"subnet_octet"`
 	GuestCID       uint32 `json:"guest_cid"`
 	FirecrackerPID int    `json:"firecracker_pid"`
-	DNSMasqPID     int    `json:"dnsmasq_pid"`
 	CreatedAt      string `json:"created_at"`
 }
 
@@ -30,7 +29,6 @@ func ToDTO(vm value.VM) (RecordDTO, error) {
 		SubnetOctet:    vm.SubnetOctet,
 		GuestCID:       vm.GuestCID,
 		FirecrackerPID: vm.FirecrackerPID,
-		DNSMasqPID:     vm.DNSMasqPID,
 		CreatedAt:      vm.CreatedAt.UTC().Format(time.RFC3339Nano),
 	}, nil
 }
@@ -53,7 +51,6 @@ func FromDTO(dto RecordDTO) (value.VM, error) {
 		SubnetOctet:    dto.SubnetOctet,
 		GuestCID:       dto.GuestCID,
 		FirecrackerPID: dto.FirecrackerPID,
-		DNSMasqPID:     dto.DNSMasqPID,
 		CreatedAt:      createdAt,
 	}, nil
 }

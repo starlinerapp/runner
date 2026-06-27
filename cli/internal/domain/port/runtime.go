@@ -6,7 +6,6 @@ type ProvisionResult struct {
 	Dir            string
 	GuestIP        string
 	FirecrackerPID int
-	DNSMasqPID     int
 }
 
 type VMRuntime interface {

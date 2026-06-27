@@ -3,30 +3,25 @@ package network
 import (
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
 	"runtime"
 	"strings"
-	"syscall"
 
 	"starliner.app/runner/internal/infrastructure/privileged"
 )
 
 type Host struct {
 	tap        string
-	dnsmasq    *exec.Cmd
 	egress     string
 	createdTap bool
 }
 
-func Setup(tap string, subnetOctet int, mac string) (*Host, error) {
+func Setup(tap string, subnetOctet int) (*Host, error) {
 	if runtime.GOOS != "linux" {
 		return nil, fmt.Errorf("network setup requires linux")
 	}
 
 	hostCIDR := fmt.Sprintf("172.16.%d.1/24", subnetOctet)
-	dhcpRange := fmt.Sprintf("172.16.%d.2,172.16.%d.254,255.255.255.0", subnetOctet, subnetOctet)
-	gateway := fmt.Sprintf("172.16.%d.1", subnetOctet)
 
 	setup := &Host{tap: tap}
 
@@ -86,13 +81,6 @@ func Setup(tap string, subnetOctet int, mac string) (*Host, error) {
 		return nil, fmt.Errorf("configure return traffic rule: %w", err)
 	}
 
-	dnsmasq, err := startDHCP(tap, dhcpRange, gateway, mac, fmt.Sprintf("172.16.%d.2", subnetOctet))
-	if err != nil {
-		setup.Teardown()
-		return nil, err
-	}
-	setup.dnsmasq = dnsmasq
-
 	return setup, nil
 }
 
@@ -119,56 +107,16 @@ func hasIptablesRule(args ...string) bool {
 	return cmd.Run() == nil
 }
 
-func (n *Host) DNSMasqPID() int {
-	if n.dnsmasq != nil && n.dnsmasq.Process != nil {
-		return n.dnsmasq.Process.Pid
-	}
-	return 0
-}
-
 func (n *Host) Teardown() {
-	if n.dnsmasq != nil && n.dnsmasq.Process != nil {
-		_ = n.dnsmasq.Process.Kill()
-	}
-
 	if n.createdTap {
 		_ = privileged.Run("ip", "link", "del", n.tap)
 	}
 }
 
-func Destroy(tap string, dnsmasqPID int) {
-	if dnsmasqPID > 0 {
-		if proc, err := os.FindProcess(dnsmasqPID); err == nil {
-			_ = proc.Kill()
-		}
-	}
-
+func Destroy(tap string) {
 	if linkExists(tap) {
 		_ = privileged.Run("ip", "link", "del", tap)
 	}
-}
-
-func startDHCP(tap, dhcpRange, gateway, mac, guestIP string) (*exec.Cmd, error) {
-	if _, err := exec.LookPath("dnsmasq"); err != nil {
-		return nil, fmt.Errorf("dnsmasq not found (required for guest DHCP): %w", err)
-	}
-
-	cmd := privileged.Command(
-		"dnsmasq",
-		"--keep-in-foreground",
-		"--bind-interfaces",
-		"--interface="+tap,
-		"--dhcp-range="+dhcpRange,
-		"--dhcp-host="+mac+","+guestIP,
-		"--dhcp-option=option:router,"+gateway,
-		"--dhcp-option=option:dns-server,8.8.8.8",
-	)
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
-	if err := cmd.Start(); err != nil {
-		return nil, fmt.Errorf("start dnsmasq: %w", err)
-	}
-
-	return cmd, nil
 }
 
 func linkExists(name string) bool {
